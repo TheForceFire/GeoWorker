@@ -10,7 +10,7 @@ public class Main {
 
         try {
             geoJson = new GeoJson("src/main/resources/GeoJsonMap1");
-            geoJson.separateEquator();
+            geoJson.separateGeoJson();
         }
         catch (IOException e){
             System.err.println("Error while working with files:\n" + e.getMessage());
