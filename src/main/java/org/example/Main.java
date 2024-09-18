@@ -1,16 +1,15 @@
 package org.example;
 
-import org.geojson.LngLatAlt;
 
 import java.io.IOException;
-import java.util.List;
+
 
 public class Main {
     public static void main(String[] args) {
-        List<LngLatAlt> geoJsonArray;
+        GeoJson geoJson;
 
         try {
-            geoJsonArray = GeoJsonManager.loadGeoJson("src/main/resources/GeoJsonMap1");
+            geoJson = new GeoJson("src/main/resources/GeoJsonMap1");
         }
         catch (IOException e){
             
