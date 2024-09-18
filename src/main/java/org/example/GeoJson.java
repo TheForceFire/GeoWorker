@@ -6,6 +6,8 @@ import org.geojson.LngLatAlt;
 import org.geojson.Polygon;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -25,19 +27,17 @@ public class GeoJson {
     public GeoJson(String path) throws IOException {
         featureCollection = new FeatureCollection();
 
-        originPoints = loadGeoJson(path);
+        FeatureCollection originFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(path);
+        Polygon originPolygon = (Polygon) originFeatureCollection.getFeatures().get(0).getGeometry();
+        originPoints = originPolygon.getExteriorRing();
+
+        featureCollection = originFeatureCollection;
+        writeGeoJson(path + "123");
     }
 
 
-    private List<LngLatAlt> loadGeoJson(String path) throws IOException {
-        FeatureCollection featureCollection = new ObjectMapper().readValue(new FileInputStream(path), FeatureCollection.class);
-        Polygon p = (Polygon) featureCollection.getFeatures().get(0).getGeometry();
-        List<LngLatAlt> lngLatAlts = p.getExteriorRing();
 
-        return lngLatAlts;
-    }
-
-    public FeatureCollection getFeatureCollection(){
-        return featureCollection;
+    public void writeGeoJson(String path) throws IOException {
+        GeoJsonFileManager.writeGeoJsonFile(path, featureCollection);
     }
 }
