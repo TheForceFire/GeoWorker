@@ -36,8 +36,15 @@ public class GeoJson {
             }
         }
 
+        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
+        for(int i = 0; i < equatorFeatureCollection.getFeatures().size(); i++){
+            FeatureCollection temp = separatePrimeMeridian(equatorFeatureCollection, i);
+            for(int j = 0; j < temp.getFeatures().size(); j++) {
+                primeMeridianFeatureCollection.add(temp.getFeatures().get(j));
+            }
+        }
 
-        finalFeatureCollection = equatorFeatureCollection;
+        finalFeatureCollection = primeMeridianFeatureCollection;
         writeGeoJson(path + "_modified");
     }
     private FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
@@ -50,8 +57,81 @@ public class GeoJson {
 
         return equatorFeatureCollection;
     }
+    private FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
+        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
 
+        List<LngLatAlt> plusList = new ArrayList<>();
+        List<LngLatAlt> minusList = new ArrayList<>();
+        setPrimeMeridianNewLists(plusList, minusList, featureCollection, featureIndex);
+        addPrimeMeridianToFeatureCollection(plusList, minusList, primeMeridianFeatureCollection);
 
+        return primeMeridianFeatureCollection;
+    }
+
+    private void setPrimeMeridianNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
+        Signs sign;
+        List<LngLatAlt> separatedPoints = getPrimeMeridianSeparatedPoints(featureCollection, featureIndex);
+        for(int i = 0; i < separatedPoints.size(); i++){
+            sign = getSign(separatedPoints.get(i).getLongitude());
+
+            if(sign == Signs.SIGN_PLUS){
+                plusList.add(separatedPoints.get(i));
+            }
+            else if(sign == Signs.SIGN_MINUS){
+                minusList.add(separatedPoints.get(i));
+            }
+            else{
+                plusList.add(separatedPoints.get(i));
+                minusList.add(separatedPoints.get(i));
+            }
+        }
+    }
+    private List<LngLatAlt> getPrimeMeridianSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
+        List<LngLatAlt> separatedPoints = new ArrayList<>();
+        Signs sign;
+        Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
+        List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
+
+        sign = getSign(originPoints.get(0).getLongitude());
+        separatedPoints.add(originPoints.get(0));
+        for(int i = 1; i < originPoints.size(); i++){
+            if(sign != getSign(originPoints.get(i).getLongitude())){
+                double latitude = medianLatitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
+                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
+                LngLatAlt separator = new LngLatAlt(0, latitude);
+
+                separatedPoints.add(separator);
+                sign = getSign(originPoints.get(i).getLongitude());
+            }
+            separatedPoints.add(originPoints.get(i));
+        }
+
+        return separatedPoints;
+    }
+    private double medianLatitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
+        double finalLatitude;
+
+        finalLatitude = (latitudeDegrees1 + latitudeDegrees2) / 2;
+        return finalLatitude;
+    }
+    private void addPrimeMeridianToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection primeMeridianFeatureCollection){
+        if(plusList.size() != 0){
+            plusList.add(plusList.get(0));
+            Polygon plusPolygon = new Polygon();
+            plusPolygon.setExteriorRing(plusList);
+            Feature plusFeature = new Feature();
+            plusFeature.setGeometry(plusPolygon);
+            primeMeridianFeatureCollection.add(plusFeature);
+        }
+        if(minusList.size() != 0){
+            minusList.add(minusList.get(0));
+            Polygon minusPolygon = new Polygon();
+            minusPolygon.setExteriorRing(minusList);
+            Feature minusFeature = new Feature();
+            minusFeature.setGeometry(minusPolygon);
+            primeMeridianFeatureCollection.add(minusFeature);
+        }
+    }
 
 
 
@@ -81,9 +161,10 @@ public class GeoJson {
 
         sign = getSign(originPoints.get(0).getLatitude());
         separatedPoints.add(originPoints.get(0));
-        for(int i = 1; i < originPoints.size() - 1; i++){
+        for(int i = 1; i < originPoints.size(); i++){
             if(sign != getSign(originPoints.get(i).getLatitude())){
-                double longitude = (originPoints.get(i).getLongitude() + originPoints.get(i - 1).getLongitude()) / 2;
+                double longitude = medianLongitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
+                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
                 LngLatAlt separator = new LngLatAlt(longitude, 0);
 
                 separatedPoints.add(separator);
@@ -93,6 +174,15 @@ public class GeoJson {
         }
 
         return separatedPoints;
+    }
+    private double medianLongitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
+        double finalLongitude;
+
+        finalLongitude = (longitudeDegrees1 + longitudeDegrees2) / 2;
+        if(finalLongitude < -180) finalLongitude += 360;
+        if(finalLongitude > 180) finalLongitude -= 360;
+
+        return finalLongitude;
     }
     private void addEquatorToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection equatorFeatureCollection){
         if(plusList.size() != 0){
