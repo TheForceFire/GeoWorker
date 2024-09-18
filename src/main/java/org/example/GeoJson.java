@@ -110,8 +110,18 @@ public class GeoJson {
     }
     private double medianLatitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
         double finalLatitude;
+        double sumLong = Math.abs(longitudeDegrees1) + Math.abs(longitudeDegrees2);
+        double longFragment;
+        if(sumLong != 0){
+            longFragment = 100 / sumLong;
+        }
+        else{
+            longFragment = 0;
+        }
+        double long1Frag = Math.abs(longitudeDegrees1) * longFragment / 100;
+        double long2Frag = Math.abs(longitudeDegrees2) * longFragment / 100;
 
-        finalLatitude = (latitudeDegrees1 + latitudeDegrees2) / 2;
+        finalLatitude = (latitudeDegrees1 * long2Frag + latitudeDegrees2 * long1Frag);
         return finalLatitude;
     }
     private void addPrimeMeridianToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection primeMeridianFeatureCollection){
@@ -178,7 +188,18 @@ public class GeoJson {
     private double medianLongitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
         double finalLongitude;
 
-        finalLongitude = (longitudeDegrees1 + longitudeDegrees2) / 2;
+        double sumLat = Math.abs(latitudeDegrees1) + Math.abs(latitudeDegrees2);
+        double latFragment;
+        if(sumLat != 0){
+            latFragment = 100 / sumLat;
+        }
+        else{
+            latFragment = 0;
+        }
+        double lat1Frag = Math.abs(latitudeDegrees1) * latFragment / 100;
+        double lat2Frag = Math.abs(latitudeDegrees2) * latFragment / 100;
+
+        finalLongitude = (longitudeDegrees1 * lat2Frag + longitudeDegrees2 * lat1Frag);
         if(finalLongitude < -180) finalLongitude += 360;
         if(finalLongitude > 180) finalLongitude -= 360;
 
