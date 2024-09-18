@@ -2,13 +2,10 @@ package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.geojson.FeatureCollection;
-import org.geojson.LngLatAlt;
-import org.geojson.Polygon;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 
 public class GeoJsonFileManager {
 
