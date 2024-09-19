@@ -35,7 +35,7 @@ public class GeoJson {
                 equatorFeatureCollection.add(temp.getFeatures().get(j));
             }
         }
-
+/*
         FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
         for(int i = 0; i < equatorFeatureCollection.getFeatures().size(); i++){
             FeatureCollection temp = separatePrimeMeridian(equatorFeatureCollection, i);
@@ -43,8 +43,8 @@ public class GeoJson {
                 primeMeridianFeatureCollection.add(temp.getFeatures().get(j));
             }
         }
-
-        finalFeatureCollection = primeMeridianFeatureCollection;
+*/
+        finalFeatureCollection = equatorFeatureCollection;
         writeGeoJson(path + "_modified");
     }
     private FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
@@ -126,7 +126,9 @@ public class GeoJson {
     }
     private void addPrimeMeridianToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection primeMeridianFeatureCollection){
         if(plusList.size() != 0){
-            plusList.add(plusList.get(0));
+            if(!plusList.get(0).equals(plusList.get(plusList.size() - 1))) {
+                plusList.add(plusList.get(0));
+            }
             Polygon plusPolygon = new Polygon();
             plusPolygon.setExteriorRing(plusList);
             Feature plusFeature = new Feature();
@@ -134,7 +136,9 @@ public class GeoJson {
             primeMeridianFeatureCollection.add(plusFeature);
         }
         if(minusList.size() != 0){
-            minusList.add(minusList.get(0));
+            if(!minusList.get(0).equals(minusList.get(minusList.size() - 1))) {
+                minusList.add(minusList.get(0));
+            }
             Polygon minusPolygon = new Polygon();
             minusPolygon.setExteriorRing(minusList);
             Feature minusFeature = new Feature();
@@ -200,14 +204,14 @@ public class GeoJson {
         double lat2Frag = Math.abs(latitudeDegrees2) * latFragment / 100;
 
         finalLongitude = (longitudeDegrees1 * lat2Frag + longitudeDegrees2 * lat1Frag);
-        if(finalLongitude < -180) finalLongitude += 360;
-        if(finalLongitude > 180) finalLongitude -= 360;
 
         return finalLongitude;
     }
     private void addEquatorToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection equatorFeatureCollection){
         if(plusList.size() != 0){
-            plusList.add(plusList.get(0));
+            if(!plusList.get(0).equals(plusList.get(plusList.size() - 1))) {
+                plusList.add(plusList.get(0));
+            }
             Polygon plusPolygon = new Polygon();
             plusPolygon.setExteriorRing(plusList);
             Feature plusFeature = new Feature();
@@ -215,7 +219,9 @@ public class GeoJson {
             equatorFeatureCollection.add(plusFeature);
         }
         if(minusList.size() != 0){
-            minusList.add(minusList.get(0));
+            if(!minusList.get(0).equals(minusList.get(minusList.size() - 1))) {
+                minusList.add(minusList.get(0));
+            }
             Polygon minusPolygon = new Polygon();
             minusPolygon.setExteriorRing(minusList);
             Feature minusFeature = new Feature();

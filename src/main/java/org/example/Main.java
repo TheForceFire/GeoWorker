@@ -9,7 +9,7 @@ public class Main {
         GeoJson geoJson;
 
         try {
-            geoJson = new GeoJson("src/main/resources/GeoJsonMap1");
+            geoJson = new GeoJson("src/main/resources/GeoJsonMap2");
             geoJson.separateGeoJson();
             System.out.println("Separation is done, check _modified version of file in same directory as you provided");
         }
