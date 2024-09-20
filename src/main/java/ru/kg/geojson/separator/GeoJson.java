@@ -1,4 +1,4 @@
-package org.example;
+package ru.kg.geojson.separator;
 
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -8,12 +8,6 @@ import org.geojson.Polygon;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-enum Signs{
-    SIGN_PLUS,
-    SIGN_MINUS,
-    SIGN_ZERO
-}
 
 public class GeoJson {
     private FeatureCollection finalFeatureCollection;
@@ -35,7 +29,7 @@ public class GeoJson {
                 equatorFeatureCollection.add(temp.getFeatures().get(j));
             }
         }
-/*
+
         FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
         for(int i = 0; i < equatorFeatureCollection.getFeatures().size(); i++){
             FeatureCollection temp = separatePrimeMeridian(equatorFeatureCollection, i);
@@ -43,8 +37,8 @@ public class GeoJson {
                 primeMeridianFeatureCollection.add(temp.getFeatures().get(j));
             }
         }
-*/
-        finalFeatureCollection = equatorFeatureCollection;
+
+        finalFeatureCollection = primeMeridianFeatureCollection;
         writeGeoJson(path + "_modified");
     }
     private FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
@@ -69,15 +63,16 @@ public class GeoJson {
     }
 
     private void setPrimeMeridianNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
-        Signs sign;
         List<LngLatAlt> separatedPoints = getPrimeMeridianSeparatedPoints(featureCollection, featureIndex);
         for(int i = 0; i < separatedPoints.size(); i++){
-            sign = getSign(separatedPoints.get(i).getLongitude());
+            double sign;
 
-            if(sign == Signs.SIGN_PLUS){
+            sign = Math.signum(separatedPoints.get(i).getLongitude());
+
+            if(sign == 1){
                 plusList.add(separatedPoints.get(i));
             }
-            else if(sign == Signs.SIGN_MINUS){
+            else if(sign == -1){
                 minusList.add(separatedPoints.get(i));
             }
             else{
@@ -88,20 +83,20 @@ public class GeoJson {
     }
     private List<LngLatAlt> getPrimeMeridianSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
-        Signs sign;
+        double sign;
         Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
         List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
-        sign = getSign(originPoints.get(0).getLongitude());
+        sign = Math.signum(originPoints.get(0).getLongitude());
         separatedPoints.add(originPoints.get(0));
         for(int i = 1; i < originPoints.size(); i++){
-            if(sign != getSign(originPoints.get(i).getLongitude())){
+            if(sign != Math.signum(originPoints.get(i).getLongitude())){
                 double latitude = medianLatitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
                         originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
                 LngLatAlt separator = new LngLatAlt(0, latitude);
 
                 separatedPoints.add(separator);
-                sign = getSign(originPoints.get(i).getLongitude());
+                sign = Math.signum(originPoints.get(i).getLongitude());
             }
             separatedPoints.add(originPoints.get(i));
         }
@@ -150,15 +145,15 @@ public class GeoJson {
 
 
     private void setEquatorNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
-        Signs sign;
         List<LngLatAlt> separatedPoints = getEquatorSeparatedPoints(featureCollection, featureIndex);
         for(int i = 0; i < separatedPoints.size(); i++){
-            sign = getSign(separatedPoints.get(i).getLatitude());
+            double sign;
+            sign = Math.signum(separatedPoints.get(i).getLatitude());
 
-            if(sign == Signs.SIGN_PLUS){
+            if(sign == 1){
                 plusList.add(separatedPoints.get(i));
             }
-            else if(sign == Signs.SIGN_MINUS){
+            else if(sign == -1){
                 minusList.add(separatedPoints.get(i));
             }
             else{
@@ -169,20 +164,20 @@ public class GeoJson {
     }
     private List<LngLatAlt> getEquatorSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
-        Signs sign;
+        double sign;
         Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
         List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
-        sign = getSign(originPoints.get(0).getLatitude());
+        sign = Math.signum(originPoints.get(0).getLatitude());
         separatedPoints.add(originPoints.get(0));
         for(int i = 1; i < originPoints.size(); i++){
-            if(sign != getSign(originPoints.get(i).getLatitude())){
+            if(sign != Math.signum(originPoints.get(i).getLatitude())){
                 double longitude = medianLongitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
                         originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
                 LngLatAlt separator = new LngLatAlt(longitude, 0);
 
                 separatedPoints.add(separator);
-                sign = getSign(originPoints.get(i).getLatitude());
+                sign = Math.signum(originPoints.get(i).getLatitude());
             }
             separatedPoints.add(originPoints.get(i));
         }
@@ -228,12 +223,6 @@ public class GeoJson {
             minusFeature.setGeometry(minusPolygon);
             equatorFeatureCollection.add(minusFeature);
         }
-    }
-
-    private Signs getSign(double value){
-        if(value < 0) return Signs.SIGN_MINUS;
-        else if(value > 0) return Signs.SIGN_PLUS;
-        return Signs.SIGN_ZERO;
     }
 
     private void writeGeoJson(String path) throws IOException {

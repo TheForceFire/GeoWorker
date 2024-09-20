@@ -1,4 +1,4 @@
-package org.example;
+package ru.kg.geojson.separator;
 
 
 import java.io.IOException;
@@ -9,7 +9,7 @@ public class Main {
         GeoJson geoJson;
 
         try {
-            geoJson = new GeoJson("src/main/resources/GeoJsonMap2");
+            geoJson = new GeoJson("src/main/resources/GeoJsonMap1");
             geoJson.separateGeoJson();
             System.out.println("Separation is done, check _modified version of file in same directory as you provided");
         }

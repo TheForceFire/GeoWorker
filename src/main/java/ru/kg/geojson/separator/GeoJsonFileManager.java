@@ -1,4 +1,4 @@
-package org.example;
+package ru.kg.geojson.separator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.geojson.FeatureCollection;
