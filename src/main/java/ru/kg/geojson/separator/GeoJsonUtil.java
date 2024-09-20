@@ -9,19 +9,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeoJson {
-    private FeatureCollection finalFeatureCollection;
-    private FeatureCollection originFeatureCollection;
-    private String path;
-
-    public GeoJson(String path) throws IOException {
-        finalFeatureCollection = new FeatureCollection();
-        originFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(path);
-
-        this.path = path;
+public class GeoJsonUtil {
+    public static void calculateAndWriteSeparatedGeoJson(FeatureCollection originFeatureCollection, String pathToSave) throws IOException
+    {
+        FeatureCollection finalFeatureCollection = separateGeoJson(originFeatureCollection);
+        GeoJsonFileManager.writeGeoJsonFile(pathToSave, finalFeatureCollection);
     }
 
-    public void separateGeoJson() throws IOException {
+
+    private static FeatureCollection separateGeoJson(FeatureCollection originFeatureCollection) {
+        FeatureCollection finalFeatureCollection;
+
         FeatureCollection equatorFeatureCollection = new FeatureCollection();
         for(int i = 0; i < originFeatureCollection.getFeatures().size(); i++){
             FeatureCollection temp = separateEquator(originFeatureCollection, i);
@@ -39,9 +37,9 @@ public class GeoJson {
         }
 
         finalFeatureCollection = primeMeridianFeatureCollection;
-        writeGeoJson(path + "_modified");
+        return finalFeatureCollection;
     }
-    private FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
+    private static FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
         FeatureCollection equatorFeatureCollection = new FeatureCollection();
 
         List<LngLatAlt> plusList = new ArrayList<>();
@@ -51,7 +49,7 @@ public class GeoJson {
 
         return equatorFeatureCollection;
     }
-    private FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
+    private static FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
         FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
 
         List<LngLatAlt> plusList = new ArrayList<>();
@@ -62,7 +60,7 @@ public class GeoJson {
         return primeMeridianFeatureCollection;
     }
 
-    private void setPrimeMeridianNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
+    private static void setPrimeMeridianNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = getPrimeMeridianSeparatedPoints(featureCollection, featureIndex);
         for(int i = 0; i < separatedPoints.size(); i++){
             double sign;
@@ -81,7 +79,7 @@ public class GeoJson {
             }
         }
     }
-    private List<LngLatAlt> getPrimeMeridianSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
+    private static List<LngLatAlt> getPrimeMeridianSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
         double sign;
         Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
@@ -103,7 +101,7 @@ public class GeoJson {
 
         return separatedPoints;
     }
-    private double medianLatitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
+    private static double medianLatitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
         double finalLatitude;
         double sumLong = Math.abs(longitudeDegrees1) + Math.abs(longitudeDegrees2);
         double longFragment;
@@ -119,7 +117,7 @@ public class GeoJson {
         finalLatitude = (latitudeDegrees1 * long2Frag + latitudeDegrees2 * long1Frag);
         return finalLatitude;
     }
-    private void addPrimeMeridianToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection primeMeridianFeatureCollection){
+    private static void addPrimeMeridianToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection primeMeridianFeatureCollection){
         if(plusList.size() != 0){
             if(!plusList.get(0).equals(plusList.get(plusList.size() - 1))) {
                 plusList.add(plusList.get(0));
@@ -144,7 +142,7 @@ public class GeoJson {
 
 
 
-    private void setEquatorNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
+    private static void setEquatorNewLists(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = getEquatorSeparatedPoints(featureCollection, featureIndex);
         for(int i = 0; i < separatedPoints.size(); i++){
             double sign;
@@ -162,7 +160,7 @@ public class GeoJson {
             }
         }
     }
-    private List<LngLatAlt> getEquatorSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
+    private static List<LngLatAlt> getEquatorSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
         double sign;
         Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
@@ -184,7 +182,7 @@ public class GeoJson {
 
         return separatedPoints;
     }
-    private double medianLongitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
+    private static double medianLongitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
         double finalLongitude;
 
         double sumLat = Math.abs(latitudeDegrees1) + Math.abs(latitudeDegrees2);
@@ -202,7 +200,7 @@ public class GeoJson {
 
         return finalLongitude;
     }
-    private void addEquatorToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection equatorFeatureCollection){
+    private static void addEquatorToFeatureCollection(List<LngLatAlt> plusList, List<LngLatAlt> minusList, FeatureCollection equatorFeatureCollection){
         if(plusList.size() != 0){
             if(!plusList.get(0).equals(plusList.get(plusList.size() - 1))) {
                 plusList.add(plusList.get(0));
@@ -223,9 +221,5 @@ public class GeoJson {
             minusFeature.setGeometry(minusPolygon);
             equatorFeatureCollection.add(minusFeature);
         }
-    }
-
-    private void writeGeoJson(String path) throws IOException {
-        GeoJsonFileManager.writeGeoJsonFile(path, finalFeatureCollection);
     }
 }
