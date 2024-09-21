@@ -10,7 +10,6 @@ public class Main {
         try {
             GeoJsonUtil.calculateAndWriteSeparatedGeoJson(GeoJsonFileManager.loadGeoJsonFile("src/main/resources/GeoJsonMap2"),
                     "src/main/resources/GeoJsonMap_modified");
-            System.out.println("Separation is done, check _modified version of file in same directory as you provided");
         }
         catch (IOException e){
             System.err.println("Error while working with files:\n" + e.getMessage());
