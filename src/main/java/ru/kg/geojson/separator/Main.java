@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-            GeoJsonUtil.calculateAndWriteSeparatedGeoJson(GeoJsonFileManager.loadGeoJsonFile("src/main/resources/GeoJsonMap2"),
+            GeoJsonUtil.calculateAndWriteSeparatedGeoJson(GeoJsonFileManager.loadGeoJsonFile("src/main/resources/GeoJsonMap3"),
                     "src/main/resources/GeoJsonMap_modified");
         }
         catch (IOException e){

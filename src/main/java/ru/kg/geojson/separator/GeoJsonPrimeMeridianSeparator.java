@@ -8,12 +8,12 @@ import org.geojson.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeoJsonEquatorSeparator {
+public class GeoJsonPrimeMeridianSeparator {
 
-    public static FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
+    public static FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
         PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);
-        FeatureCollection equatorFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
-        return equatorFeatureCollection;
+        FeatureCollection primeMeridianFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
+        return primeMeridianFeatureCollection;
     }
 
     private static PolygonsListSeparated setPolygonsListSeparated(FeatureCollection featureCollection, int featureIndex){
@@ -26,30 +26,28 @@ public class GeoJsonEquatorSeparator {
 
         return separatedLists;
     }
-    private static PolygonPlusMinusLists divideListBySign(List<LngLatAlt> separatedPoints){
-        List<LngLatAlt> plusList = new ArrayList<>();
-        List<LngLatAlt> minusList = new ArrayList<>();
+    private static List<LngLatAlt> calculateZeroCoordinates(FeatureCollection featureCollection, int featureIndex){
+        List<LngLatAlt> separatedPoints = new ArrayList<>();
+        Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
+        List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
-        for(int i = 0; i < separatedPoints.size(); i++){
-            double sign;
-            sign = Math.signum(separatedPoints.get(i).getLatitude());
+        double sign;
+        sign = Math.signum(originPoints.get(0).getLongitude());
+        separatedPoints.add(originPoints.get(0));
+        for(int i = 1; i < originPoints.size(); i++){
+            if(sign != Math.signum(originPoints.get(i).getLongitude())){
+                double latitude = getMedianLatitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
+                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
+                LngLatAlt separator = new LngLatAlt(0, latitude);
 
-            if(sign == 1){
-                plusList.add(separatedPoints.get(i));
+                separatedPoints.add(separator);
+                sign = Math.signum(originPoints.get(i).getLongitude());
             }
-            else if(sign == -1){
-                minusList.add(separatedPoints.get(i));
-            }
-            else{
-                plusList.add(separatedPoints.get(i));
-                minusList.add(separatedPoints.get(i));
-            }
+            separatedPoints.add(originPoints.get(i));
         }
 
-        PolygonPlusMinusLists polygonPlusMinusLists = new PolygonPlusMinusLists(plusList, minusList);
-        return polygonPlusMinusLists;
+        return separatedPoints;
     }
-
     private static PolygonsListSeparated findAndSeparateIntersections(List<LngLatAlt> list){
         PolygonsListSeparated polygonsListSeparatedToReturn = new PolygonsListSeparated();
         if(list.size() == 0) return polygonsListSeparatedToReturn;
@@ -69,9 +67,9 @@ public class GeoJsonEquatorSeparator {
             int j = 0;
             boolean isFoundIntersection = false;
             while(j < polygonList.size() - 1 && !isFoundIntersection){
-                if(polygonList.get(j).getLatitude() == 0 && polygonList.get(j + 1).getLatitude() == 0){
+                if(polygonList.get(j).getLongitude() == 0 && polygonList.get(j + 1).getLongitude() == 0){
 
-                    int intersectionIndex = checkForIntersection(polygonList, polygonList.get(j).getLongitude(), polygonList.get(j + 1).getLongitude());
+                    int intersectionIndex = checkForIntersection(polygonList, polygonList.get(j).getLatitude(), polygonList.get(j + 1).getLatitude());
                     if(intersectionIndex != -1){
                         polygonList = separateIntersection(polygonList, j, intersectionIndex);
 
@@ -92,25 +90,6 @@ public class GeoJsonEquatorSeparator {
 
         return polygonsListSeparatedToReturn;
     }
-
-    private static PolygonsListSeparated separatePolygonsList(List<LngLatAlt> list){
-        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
-
-        List<LngLatAlt> polygonToAdd = new ArrayList<>();
-
-        for(int i = 0; i < list.size(); i++){
-            polygonToAdd.add(list.get(i));
-
-            if(polygonToAdd.size() > 1 && polygonToAdd.get(0).equals(polygonToAdd.get(polygonToAdd.size() - 1))){
-                 separatedLists.addPolygonList(polygonToAdd);
-                 polygonToAdd = new ArrayList<>();
-            }
-
-        }
-
-        return separatedLists;
-    }
-
     private static int checkForIntersection(List<LngLatAlt> list, double lineDot1, double lineDot2){
         int intersectionListIndex = -1;
         double lineStart1 = Math.min(lineDot1, lineDot2);
@@ -118,9 +97,9 @@ public class GeoJsonEquatorSeparator {
 
         int i = 0;
         while(i < list.size() - 1 && intersectionListIndex == -1){
-            if(list.get(i).getLatitude() == 0 && list.get(i + 1).getLatitude() == 0){
-                double lineStart2 = Math.min(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
-                double lineEnd2 = Math.max(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
+            if(list.get(i).getLongitude() == 0 && list.get(i + 1).getLongitude() == 0){
+                double lineStart2 = Math.min(list.get(i).getLatitude(), list.get(i + 1).getLatitude());
+                double lineEnd2 = Math.max(list.get(i).getLatitude(), list.get(i + 1).getLatitude());
 
                 if(lineStart1 < lineStart2 && lineEnd2 < lineEnd1){
                     intersectionListIndex = i;
@@ -163,60 +142,74 @@ public class GeoJsonEquatorSeparator {
 
         return separatedList;
     }
+    private static PolygonsListSeparated separatePolygonsList(List<LngLatAlt> list){
+        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
 
+        List<LngLatAlt> polygonToAdd = new ArrayList<>();
 
-    private static List<LngLatAlt> calculateZeroCoordinates(FeatureCollection featureCollection, int featureIndex){
-        List<LngLatAlt> separatedPoints = new ArrayList<>();
-        Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
-        List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
+        for(int i = 0; i < list.size(); i++){
+            polygonToAdd.add(list.get(i));
 
-        double sign;
-        sign = Math.signum(originPoints.get(0).getLatitude());
-        separatedPoints.add(originPoints.get(0));
-        for(int i = 1; i < originPoints.size(); i++){
-            if(sign != Math.signum(originPoints.get(i).getLatitude())){
-                double longitude = getMedianLongitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
-                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
-                LngLatAlt separator = new LngLatAlt(longitude, 0);
-
-                separatedPoints.add(separator);
-                sign = Math.signum(originPoints.get(i).getLatitude());
+            if(polygonToAdd.size() > 1 && polygonToAdd.get(0).equals(polygonToAdd.get(polygonToAdd.size() - 1))){
+                separatedLists.addPolygonList(polygonToAdd);
+                polygonToAdd = new ArrayList<>();
             }
-            separatedPoints.add(originPoints.get(i));
+
         }
 
-        return separatedPoints;
+        return separatedLists;
     }
-    private static double getMedianLongitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
-        double finalLongitude;
+    private static PolygonPlusMinusLists divideListBySign(List<LngLatAlt> separatedPoints){
+        List<LngLatAlt> plusList = new ArrayList<>();
+        List<LngLatAlt> minusList = new ArrayList<>();
 
-        double sumLat = Math.abs(latitudeDegrees1) + Math.abs(latitudeDegrees2);
-        double latFragment;
-        if(sumLat != 0){
-            latFragment = 100 / sumLat;
+        for(int i = 0; i < separatedPoints.size(); i++){
+            double sign;
+            sign = Math.signum(separatedPoints.get(i).getLongitude());
+
+            if(sign == 1){
+                plusList.add(separatedPoints.get(i));
+            }
+            else if(sign == -1){
+                minusList.add(separatedPoints.get(i));
+            }
+            else{
+                plusList.add(separatedPoints.get(i));
+                minusList.add(separatedPoints.get(i));
+            }
+        }
+
+        PolygonPlusMinusLists polygonPlusMinusLists = new PolygonPlusMinusLists(plusList, minusList);
+        return polygonPlusMinusLists;
+    }
+    private static double getMedianLatitude(double latitudeDegrees1, double longitudeDegrees1, double latitudeDegrees2, double longitudeDegrees2){
+        double finalLatitude;
+        double sumLong = Math.abs(longitudeDegrees1) + Math.abs(longitudeDegrees2);
+        double longFragment;
+        if(sumLong != 0){
+            longFragment = 100 / sumLong;
         }
         else{
-            latFragment = 0;
+            longFragment = 0;
         }
-        double lat1Frag = Math.abs(latitudeDegrees1) * latFragment / 100;
-        double lat2Frag = Math.abs(latitudeDegrees2) * latFragment / 100;
+        double long1Frag = Math.abs(longitudeDegrees1) * longFragment / 100;
+        double long2Frag = Math.abs(longitudeDegrees2) * longFragment / 100;
 
-        finalLongitude = (longitudeDegrees1 * lat2Frag + longitudeDegrees2 * lat1Frag);
-
-        return finalLongitude;
+        finalLatitude = (latitudeDegrees1 * long2Frag + latitudeDegrees2 * long1Frag);
+        return finalLatitude;
     }
+
     private static FeatureCollection getPolygonsToFeatureCollection(PolygonsListSeparated separatedLists){
-        FeatureCollection equatorFeatureCollection = new FeatureCollection();
+        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
 
         for(int i = 0; i < separatedLists.size(); i++){
             Polygon polygon = new Polygon();
             polygon.setExteriorRing(separatedLists.getPolygonList(i));
             Feature feature = new Feature();
             feature.setGeometry(polygon);
-            equatorFeatureCollection.add(feature);
+            primeMeridianFeatureCollection.add(feature);
         }
 
-        return equatorFeatureCollection;
+        return primeMeridianFeatureCollection;
     }
-
 }
