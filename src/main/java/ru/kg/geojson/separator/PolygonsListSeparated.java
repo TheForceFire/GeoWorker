@@ -20,13 +20,12 @@ public class PolygonsListSeparated {
             throw new ArrayIndexOutOfBoundsException(index);
         }
     }
-    public void addPolygonList(List<LngLatAlt> polyList){
-        if(polyList.size() == 0) return;
-
-        if(!polyList.get(0).equals(polyList.get(polyList.size() - 1))){
-            polyList.add(polyList.get(0));
+    public void removePolygonList(int index){
+        if(index < size()){
+            polyLists.remove(index);
         }
-
+    }
+    public void addPolygonList(List<LngLatAlt> polyList){
         polyLists.add(polyList);
     }
     public int size(){

@@ -11,15 +11,22 @@ import java.util.List;
 public class GeoJsonEquatorSeparator {
 
     public static FeatureCollection separateEquator(FeatureCollection featureCollection, int featureIndex) {
-        PolygonsListSeparated separatedLists = setPolygonLists(featureCollection, featureIndex);
+        PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);
         FeatureCollection equatorFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
-
         return equatorFeatureCollection;
     }
 
-    private static PolygonsListSeparated setPolygonLists(FeatureCollection featureCollection, int featureIndex){
-        List<LngLatAlt> separatedPoints = getSeparatedPoints(featureCollection, featureIndex);
+    private static PolygonsListSeparated setPolygonsListSeparated(FeatureCollection featureCollection, int featureIndex){
+        List<LngLatAlt> separatedPoints = calculateZeroCoordinates(featureCollection, featureIndex);
+        PolygonPlusMinusLists polygonPlusMinusLists = divideListBySign(separatedPoints);
 
+        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
+        separatedLists.addPolygonsListSeparated(findAndSeparateIntersections(polygonPlusMinusLists.getPlusList()));
+        separatedLists.addPolygonsListSeparated(findAndSeparateIntersections(polygonPlusMinusLists.getMinusList()));
+
+        return separatedLists;
+    }
+    private static PolygonPlusMinusLists divideListBySign(List<LngLatAlt> separatedPoints){
         List<LngLatAlt> plusList = new ArrayList<>();
         List<LngLatAlt> minusList = new ArrayList<>();
 
@@ -39,131 +46,129 @@ public class GeoJsonEquatorSeparator {
             }
         }
 
-        PolygonsListSeparated separatedLists = divideFigures(plusList, minusList);
-
-        return separatedLists;
+        PolygonPlusMinusLists polygonPlusMinusLists = new PolygonPlusMinusLists(plusList, minusList);
+        return polygonPlusMinusLists;
     }
-    private static PolygonsListSeparated divideFigures(List<LngLatAlt> plusList, List<LngLatAlt> minusList){
-        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
 
-        separatedLists.addPolygonsListSeparated(divideFigure(plusList));
-        separatedLists.addPolygonsListSeparated(divideFigure(minusList));
-
-        return separatedLists;
-    }
-    private static PolygonsListSeparated divideFigure(List<LngLatAlt> list){
-        PolygonsListSeparated polyLists = new PolygonsListSeparated();
-
-        if(list.get(0).equals(list.get(list.size() - 1))) {
-            list.remove(list.size() - 1);
+    private static PolygonsListSeparated findAndSeparateIntersections(List<LngLatAlt> list){
+        PolygonsListSeparated polygonsListSeparatedToReturn = new PolygonsListSeparated();
+        if(!list.get(0).equals(list.get(list.size() - 1))) {
+            list.add(list.get(0));
         }
 
-        boolean isFigureConvex = isFigureConvex(list);
+        polygonsListSeparatedToReturn.addPolygonList(list);
+        int i = 0;
+        int depth = 0;
 
-        if(!isFigureConvex){
-            polyLists.addPolygonList(list);
-        }
-        else{
-            polyLists = divideConvexList(list);
-        }
+        while(i < polygonsListSeparatedToReturn.size() && depth < 10){
 
-        return polyLists;
-    }
-    private static PolygonsListSeparated divideConvexList(List<LngLatAlt> list){
-        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
+            List<LngLatAlt> polygonList = polygonsListSeparatedToReturn.getPolygonList(i);
 
-        List<LngLatAlt> firstList = new ArrayList<>();
-        int j = 0;
-        while(j < list.size() && list.get(j).getLatitude() != 0){
-            firstList.add(list.get(j));
+            int j = 0;
+            boolean isFoundIntersection = false;
+            while(j < polygonList.size() - 1 && !isFoundIntersection){
+                if(polygonList.get(j).getLatitude() == 0 && polygonList.get(j + 1).getLatitude() == 0){
 
-            j++;
-        }
-        if(firstList.size() != 0) {
-            firstList.add(list.get(j));
-            j++;
-        }
+                    int intersectionIndex = checkForIntersection(polygonList, polygonList.get(j).getLongitude(), polygonList.get(j + 1).getLongitude());
+                    if(intersectionIndex != -1){
+                        polygonList = separateIntersection(polygonList, j, intersectionIndex);
 
-        List<LngLatAlt> nextList = new ArrayList<>();
-        for(int i = j; i < list.size(); i++){
-            nextList.add(list.get(i));
+                        polygonsListSeparatedToReturn.removePolygonList(i);
+                        polygonsListSeparatedToReturn.addPolygonsListSeparated(separatePolygonsList(polygonList));
 
-            if(list.get(i).getLatitude() == 0 && nextList.size() > 1){
-                separatedLists.addPolygonList(nextList);
-                nextList = new ArrayList<>();
+                        isFoundIntersection = true;
+                        i = -1;
+                        depth++;
+                    }
+                }
+
+                j++;
             }
 
+            i++;
         }
 
-        if(firstList.size() != 0) {
-            nextList.addAll(firstList);
-            separatedLists.addPolygonList(nextList);
-        }
-
-        return separatedLists;
+        return polygonsListSeparatedToReturn;
     }
-    private static boolean isFigureConvex(List<LngLatAlt> list){
-        boolean isConvex = false;
 
-        double longestZeroLatitudeLineSize = 0;
-        LngLatAlt farLeftCoord = null;
-        LngLatAlt farRightCoord = null;
+    private static PolygonsListSeparated separatePolygonsList(List<LngLatAlt> list){
+        PolygonsListSeparated separatedLists = new PolygonsListSeparated();
 
-        double sumZeroLatitudeLinesSize = 0;
-        LngLatAlt prevLngLatAlt = null;
+        List<LngLatAlt> polygonToAdd = new ArrayList<>();
 
         for(int i = 0; i < list.size(); i++){
-            LngLatAlt currentCoord = list.get(i);
+            polygonToAdd.add(list.get(i));
 
-            if(currentCoord.getLatitude() == 0) {
-                if (farLeftCoord == null) {
-                    farLeftCoord = currentCoord;
-                }
-                if (farRightCoord == null) {
-                    farRightCoord = currentCoord;
-                }
-                if (farLeftCoord.getLongitude() > currentCoord.getLongitude()) {
-                    farLeftCoord = currentCoord;
-                }
-                if (farRightCoord.getLongitude() < currentCoord.getLongitude()) {
-                    farRightCoord = currentCoord;
+            if(polygonToAdd.size() > 1 && polygonToAdd.get(0).equals(polygonToAdd.get(polygonToAdd.size() - 1))){
+                 separatedLists.addPolygonList(polygonToAdd);
+                 polygonToAdd = new ArrayList<>();
+            }
+
+        }
+
+        return separatedLists;
+    }
+
+    private static int checkForIntersection(List<LngLatAlt> list, double lineDot1, double lineDot2){
+        int intersectionListIndex = -1;
+        double lineStart1 = Math.min(lineDot1, lineDot2);
+        double lineEnd1 = Math.max(lineDot1, lineDot2);
+
+        int i = 0;
+        while(i < list.size() - 1 && intersectionListIndex == -1){
+            if(list.get(i).getLatitude() == 0 && list.get(i + 1).getLatitude() == 0){
+                double lineStart2 = Math.min(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
+                double lineEnd2 = Math.max(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
+
+                if(lineStart1 < lineStart2 && lineEnd2 < lineEnd1){
+                    intersectionListIndex = i;
                 }
             }
 
-
-            if(prevLngLatAlt != null){
-                if(prevLngLatAlt.getLatitude() == 0 && list.get(i).getLatitude() == 0){
-                    sumZeroLatitudeLinesSize += Math.abs(Math.abs(prevLngLatAlt.getLongitude()) - Math.abs(list.get(i).getLongitude()));
-                }
-            }
-            prevLngLatAlt = list.get(i);
+            i++;
         }
 
+        return intersectionListIndex;
+    }
+    private static List<LngLatAlt> separateIntersection(List<LngLatAlt> list, int lineIndex, int intersectionIndex){
+        List<LngLatAlt> separatedList = new ArrayList<>();
 
-        if(farRightCoord != null && farLeftCoord != null) {
-            longestZeroLatitudeLineSize = Math.abs(Math.abs(farRightCoord.getLongitude()) - Math.abs(farLeftCoord.getLongitude()));
+        int lowerSeparateIndex = Math.min(lineIndex, intersectionIndex);
+        int higherSeparateIndex = Math.max(lineIndex, intersectionIndex);
+
+        int i = 0;
+        while(i != lowerSeparateIndex + 1){
+            separatedList.add(list.get(i));
+            i++;
+        }
+        i = higherSeparateIndex + 1;
+        while (i != list.size()){
+            separatedList.add(list.get(i));
+            i++;
+        }
+        if(!separatedList.get(0).equals(separatedList.get(separatedList.size() - 1))) {
+            separatedList.add(separatedList.get(0));
         }
 
-
-        if(list.get(0).getLatitude() == 0 && list.get(list.size() - 1).getLatitude() == 0){
-            sumZeroLatitudeLinesSize += Math.abs(Math.abs(list.get(0).getLongitude()) - Math.abs(list.get(list.size() - 1).getLongitude()));
+        i = lowerSeparateIndex + 1;
+        while (i != higherSeparateIndex + 1){
+            separatedList.add(list.get(i));
+            i++;
+        }
+        if(!separatedList.get(separatedList.size() - 1).equals(list.get(lowerSeparateIndex + 1))) {
+            separatedList.add(list.get(lowerSeparateIndex + 1));
         }
 
-
-
-        if(sumZeroLatitudeLinesSize > longestZeroLatitudeLineSize){
-            isConvex = true;
-        }
-        return isConvex;
+        return separatedList;
     }
 
 
-    private static List<LngLatAlt> getSeparatedPoints(FeatureCollection featureCollection, int featureIndex){
+    private static List<LngLatAlt> calculateZeroCoordinates(FeatureCollection featureCollection, int featureIndex){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
-        double sign;
         Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
         List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
+        double sign;
         sign = Math.signum(originPoints.get(0).getLatitude());
         separatedPoints.add(originPoints.get(0));
         for(int i = 1; i < originPoints.size(); i++){
