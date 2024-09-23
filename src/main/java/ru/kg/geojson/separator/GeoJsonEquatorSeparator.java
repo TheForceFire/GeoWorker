@@ -69,28 +69,31 @@ public class GeoJsonEquatorSeparator {
 
             List<LineWithIndex> linesWithZeroDecrease = findAllLinesWithZeroDecrease(polygonList);
 
-            int j = 0;
-            boolean isFoundIntersection = false;
+            if (linesWithZeroDecrease.size() > 1) {
 
-            while(j < linesWithZeroDecrease.size() - 1 && !isFoundIntersection){
-                int line1Index = linesWithZeroDecrease.get(j).getIndex();
-                int line2Index = linesWithZeroDecrease.get(j + 1).getIndex();
+                int j = 1;
+                boolean isFoundIntersection = false;
 
-                boolean isIntersected = checkForIntersectionTwoLines(
-                        polygonList.get(line1Index).getLongitude(), polygonList.get(line1Index + 1).getLongitude(),
-                        polygonList.get(line2Index).getLongitude(), polygonList.get(line2Index + 1).getLongitude()
-                );
-                if(isIntersected){
-                    polygonList = separateIntersection(polygonList, linesWithZeroDecrease.get(j).getIndex(), linesWithZeroDecrease.get(j + 1).getIndex());
+                int line1Index = linesWithZeroDecrease.get(0).getIndex();
+                while (j < linesWithZeroDecrease.size() && !isFoundIntersection) {
+                    int line2Index = linesWithZeroDecrease.get(j).getIndex();
 
-                    polygonsListSeparatedToReturn.removePolygonList(i);
-                    polygonsListSeparatedToReturn.addPolygonsListSeparated(separatePolygonsList(polygonList));
+                    boolean isIntersected = checkForIntersectionTwoLines(
+                            polygonList.get(line1Index).getLongitude(), polygonList.get(line1Index + 1).getLongitude(),
+                            polygonList.get(line2Index).getLongitude(), polygonList.get(line2Index + 1).getLongitude()
+                    );
+                    if (isIntersected) {
+                        polygonList = separateIntersection(polygonList, linesWithZeroDecrease.get(0).getIndex(), linesWithZeroDecrease.get(j).getIndex());
 
-                    isFoundIntersection = true;
-                    i = -1;
-                    depth++;
+                        polygonsListSeparatedToReturn.removePolygonList(i);
+                        polygonsListSeparatedToReturn.addPolygonsListSeparated(separatePolygonsList(polygonList));
+
+                        isFoundIntersection = true;
+                        i = -1;
+                        depth++;
+                    }
+                    j++;
                 }
-                j++;
             }
             i++;
         }
