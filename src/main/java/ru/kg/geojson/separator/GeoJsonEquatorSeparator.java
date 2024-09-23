@@ -98,6 +98,7 @@ public class GeoJsonEquatorSeparator {
             i++;
         }
 
+        polygonsListSeparatedToReturn.removeEmptyPolygons();
         return polygonsListSeparatedToReturn;
     }
 

@@ -96,6 +96,7 @@ public class GeoJsonPrimeMeridianSeparator {
             i++;
         }
 
+        polygonsListSeparatedToReturn.removeEmptyPolygons();
         return polygonsListSeparatedToReturn;
     }
 

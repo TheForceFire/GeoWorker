@@ -32,6 +32,17 @@ public class PolygonsListSeparated {
         return polyLists.size();
     }
 
+    public void removeEmptyPolygons(){
+        //Empty polygon is a polygon that have only two closure coordinated
+
+        for(int i = 0; i < polyLists.size(); i++){
+            if(polyLists.get(i).size() == 2 && polyLists.get(i).get(0).equals(polyLists.get(i).get(1))){
+                polyLists.remove(i);
+                i--;
+            }
+        }
+    }
+
     public void addPolygonsListSeparated(PolygonsListSeparated polygonsListSeparated){
         for(int i = 0; i < polygonsListSeparated.size(); i++){
             addPolygonList(polygonsListSeparated.getPolygonList(i));
