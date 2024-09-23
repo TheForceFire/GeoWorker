@@ -66,31 +66,60 @@ public class GeoJsonEquatorSeparator {
 
             List<LngLatAlt> polygonList = polygonsListSeparatedToReturn.getPolygonList(i);
 
+
+            List<LineWithIndex> linesWithZeroDecrease = findAllLinesWithZeroDecrease(polygonList);
+
             int j = 0;
             boolean isFoundIntersection = false;
-            while(j < polygonList.size() - 1 && !isFoundIntersection){
-                if(polygonList.get(j).getLatitude() == 0 && polygonList.get(j + 1).getLatitude() == 0){
 
-                    int intersectionIndex = checkForIntersection(polygonList, polygonList.get(j).getLongitude(), polygonList.get(j + 1).getLongitude());
-                    if(intersectionIndex != -1){
-                        polygonList = separateIntersection(polygonList, j, intersectionIndex);
+            while(j < linesWithZeroDecrease.size() - 1 && !isFoundIntersection){
+                int line1Index = linesWithZeroDecrease.get(j).getIndex();
+                int line2Index = linesWithZeroDecrease.get(j + 1).getIndex();
 
-                        polygonsListSeparatedToReturn.removePolygonList(i);
-                        polygonsListSeparatedToReturn.addPolygonsListSeparated(separatePolygonsList(polygonList));
+                boolean isIntersected = checkForIntersectionTwoLines(
+                        polygonList.get(line1Index).getLongitude(), polygonList.get(line1Index + 1).getLongitude(),
+                        polygonList.get(line2Index).getLongitude(), polygonList.get(line2Index + 1).getLongitude()
+                );
+                if(isIntersected){
+                    polygonList = separateIntersection(polygonList, linesWithZeroDecrease.get(j).getIndex(), linesWithZeroDecrease.get(j + 1).getIndex());
 
-                        isFoundIntersection = true;
-                        i = -1;
-                        depth++;
-                    }
+                    polygonsListSeparatedToReturn.removePolygonList(i);
+                    polygonsListSeparatedToReturn.addPolygonsListSeparated(separatePolygonsList(polygonList));
+
+                    isFoundIntersection = true;
+                    i = -1;
+                    depth++;
                 }
-
                 j++;
             }
-
             i++;
         }
 
         return polygonsListSeparatedToReturn;
+    }
+
+    private static List<LineWithIndex> findAllLinesWithZeroDecrease(List<LngLatAlt> list){
+        List<LineWithIndex> lineWithIndexes = new ArrayList<>();
+
+        for(int i = 0; i < list.size() - 1; i++){
+            if(list.get(i).getLatitude() == 0 && list.get(i + 1).getLatitude() == 0){
+                double lineLenght = lineLength(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
+                LineWithIndex line = new LineWithIndex(lineLenght, i);
+                lineWithIndexes.add(line);
+            }
+        }
+
+        if(lineWithIndexes.size() > 1){
+            LineWithIndex.sort(lineWithIndexes);
+        }
+        return lineWithIndexes;
+    }
+
+    private static double lineLength(double lineDot1, double lineDot2){
+        double lineStart = Math.min(lineDot1, lineDot2);
+        double lineEnd = Math.max(lineDot1, lineDot2);
+
+        return lineEnd - lineStart;
     }
 
     private static PolygonsListSeparated separatePolygonsList(List<LngLatAlt> list){
@@ -110,27 +139,19 @@ public class GeoJsonEquatorSeparator {
 
         return separatedLists;
     }
+    private static boolean checkForIntersectionTwoLines(double lineDot11, double lineDot12, double lineDot21, double lineDot22){
+        boolean isIntersected = false;
+        double lineStart1 = Math.min(lineDot11, lineDot12);
+        double lineEnd1 = Math.max(lineDot11, lineDot12);
 
-    private static int checkForIntersection(List<LngLatAlt> list, double lineDot1, double lineDot2){
-        int intersectionListIndex = -1;
-        double lineStart1 = Math.min(lineDot1, lineDot2);
-        double lineEnd1 = Math.max(lineDot1, lineDot2);
+        double lineStart2 = Math.min(lineDot21, lineDot22);
+        double lineEnd2 = Math.max(lineDot21, lineDot22);
 
-        int i = 0;
-        while(i < list.size() - 1 && intersectionListIndex == -1){
-            if(list.get(i).getLatitude() == 0 && list.get(i + 1).getLatitude() == 0){
-                double lineStart2 = Math.min(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
-                double lineEnd2 = Math.max(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
-
-                if(lineStart1 < lineStart2 && lineEnd2 < lineEnd1){
-                    intersectionListIndex = i;
-                }
-            }
-
-            i++;
+        if(lineStart1 < lineStart2 && lineEnd2 < lineEnd1){
+            isIntersected = true;
         }
 
-        return intersectionListIndex;
+        return isIntersected;
     }
     private static List<LngLatAlt> separateIntersection(List<LngLatAlt> list, int lineIndex, int intersectionIndex){
         List<LngLatAlt> separatedList = new ArrayList<>();
