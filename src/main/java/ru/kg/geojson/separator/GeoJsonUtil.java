@@ -2,18 +2,15 @@ package ru.kg.geojson.separator;
 
 import org.geojson.FeatureCollection;
 
-import java.io.IOException;
-
 
 public class GeoJsonUtil {
-    public static void calculateAndWriteSeparatedGeoJson(FeatureCollection originFeatureCollection, String pathToSave) throws IOException
-    {
-        FeatureCollection finalFeatureCollection = separateGeoJson(originFeatureCollection);
-        GeoJsonFileManager.writeGeoJsonFile(pathToSave, finalFeatureCollection);
+
+    public static FeatureCollection separateGeoJson(FeatureCollection originFeatureCollection){
+        FeatureCollection finalFeatureCollection = calculateSeparatedGeoJson(originFeatureCollection);
+        return finalFeatureCollection;
     }
 
-
-    private static FeatureCollection separateGeoJson(FeatureCollection originFeatureCollection) {
+    private static FeatureCollection calculateSeparatedGeoJson(FeatureCollection originFeatureCollection) {
         FeatureCollection finalFeatureCollection;
 
         FeatureCollection equatorFeatureCollection = new FeatureCollection();
@@ -35,10 +32,4 @@ public class GeoJsonUtil {
         finalFeatureCollection = primeMeridianFeatureCollection;
         return finalFeatureCollection;
     }
-
-
-
-
-
-
 }

@@ -107,8 +107,8 @@ public class GeoJsonEquatorSeparator {
 
         for(int i = 0; i < list.size() - 1; i++){
             if(list.get(i).getLatitude() == 0 && list.get(i + 1).getLatitude() == 0){
-                double lineLenght = lineLength(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
-                LineWithIndex line = new LineWithIndex(lineLenght, i);
+                double lineLength = lineLength(list.get(i).getLongitude(), list.get(i + 1).getLongitude());
+                LineWithIndex line = new LineWithIndex(lineLength, i);
                 lineWithIndexes.add(line);
             }
         }
