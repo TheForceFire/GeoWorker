@@ -3,7 +3,6 @@ import org.junit.jupiter.api.Test;
 import ru.kg.geojson.separator.GeoJsonFileManager;
 import ru.kg.geojson.separator.GeoJsonUtil;
 
-import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
