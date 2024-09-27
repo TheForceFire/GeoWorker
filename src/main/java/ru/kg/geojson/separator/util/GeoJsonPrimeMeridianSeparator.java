@@ -1,4 +1,4 @@
-package ru.kg.geojson.separator;
+package ru.kg.geojson.separator.util;
 
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -8,7 +8,7 @@ import org.geojson.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeoJsonPrimeMeridianSeparator {
+class GeoJsonPrimeMeridianSeparator {
 
     public static FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
         PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);

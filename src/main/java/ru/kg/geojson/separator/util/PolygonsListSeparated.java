@@ -1,11 +1,11 @@
-package ru.kg.geojson.separator;
+package ru.kg.geojson.separator.util;
 
 import org.geojson.LngLatAlt;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PolygonsListSeparated {
+class PolygonsListSeparated {
     private List<List<LngLatAlt>> polyLists;
     public PolygonsListSeparated(){
         polyLists = new ArrayList<>();

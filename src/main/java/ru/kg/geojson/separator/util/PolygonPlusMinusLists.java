@@ -1,10 +1,10 @@
-package ru.kg.geojson.separator;
+package ru.kg.geojson.separator.util;
 
 import org.geojson.LngLatAlt;
 
 import java.util.List;
 
-public class PolygonPlusMinusLists {
+class PolygonPlusMinusLists {
     private List<LngLatAlt> plusList;
     private List<LngLatAlt> minusList;
 

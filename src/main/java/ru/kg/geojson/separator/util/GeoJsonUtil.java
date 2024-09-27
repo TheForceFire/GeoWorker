@@ -1,4 +1,4 @@
-package ru.kg.geojson.separator;
+package ru.kg.geojson.separator.util;
 
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;

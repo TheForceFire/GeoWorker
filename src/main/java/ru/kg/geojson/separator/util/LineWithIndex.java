@@ -1,9 +1,9 @@
-package ru.kg.geojson.separator;
+package ru.kg.geojson.separator.util;
 
 import java.util.Comparator;
 import java.util.List;
 
-public class LineWithIndex {
+class LineWithIndex {
     private double length;
     private int index;
 
