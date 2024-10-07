@@ -7,7 +7,7 @@ import ru.kg.geojson.separator.util.GeoJsonUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeoJsonGeohashConventor {
+public class GeoJsonGeohashConventorUtil {
 
 
     public static List<String> separateGeoJsonAndConvertToSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
@@ -17,19 +17,19 @@ public class GeoJsonGeohashConventor {
         return geohashes;
     }
 
-    public static List<String>[] separateGeoJsonAndConvertToMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
+    public static List<List<String>> separateGeoJsonAndConvertToMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
 
-        List<String>[] geohashes = new List[separatedFeatureCollection.getFeatures().size()];
+        List<List<String>> geohashesList = new ArrayList<>();
 
         for(int i = 0; i < separatedFeatureCollection.getFeatures().size(); i++){
             FeatureCollection tempFeatureCollection = new FeatureCollection();
             tempFeatureCollection.add(separatedFeatureCollection.getFeatures().get(i));
 
-            geohashes[i] = GeohashUtil.featureCollectionToGeohash(tempFeatureCollection, precision);
+            geohashesList.add(GeohashUtil.featureCollectionToGeohash(tempFeatureCollection, precision));
         }
 
-        return geohashes;
+        return geohashesList;
     }
 
 }
