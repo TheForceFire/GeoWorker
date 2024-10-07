@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
+    implementation 'ch.hsr:geohash:1.4.0'
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
 
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
