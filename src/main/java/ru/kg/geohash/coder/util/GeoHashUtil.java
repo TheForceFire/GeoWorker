@@ -1,4 +1,4 @@
-package ru.kg.util;
+package ru.kg.geohash.coder.util;
 
 import ch.hsr.geohash.BoundingBox;
 import ch.hsr.geohash.GeoHash;
@@ -6,23 +6,20 @@ import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.LngLatAlt;
 import org.geojson.Polygon;
-import ru.kg.geohash.coder.util.GeohashUtil;
 import ru.kg.geojson.separator.util.GeoJsonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureCollectionConventorUtil {
-
-
-    public static List<String> toSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
+public class GeoHashUtil {
+    public static List<String> featureCollectionToSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
-        List<String> geohashes = GeohashUtil.featureCollectionToGeohash(separatedFeatureCollection, precision);
+        List<String> geohashes = GeohashConvertor.featureCollectionToGeohash(separatedFeatureCollection, precision);
 
         return geohashes;
     }
 
-    public static List<List<String>> toMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
+    public static List<List<String>> featureCollectionToMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
 
         List<List<String>> geohashesList = new ArrayList<>();
@@ -31,15 +28,15 @@ public class FeatureCollectionConventorUtil {
             FeatureCollection tempFeatureCollection = new FeatureCollection();
             tempFeatureCollection.add(separatedFeatureCollection.getFeatures().get(i));
 
-            geohashesList.add(GeohashUtil.featureCollectionToGeohash(tempFeatureCollection, precision));
+            geohashesList.add(GeohashConvertor.featureCollectionToGeohash(tempFeatureCollection, precision));
         }
 
         return geohashesList;
     }
 
-    public static FeatureCollection toGeohashBoundingFeatureCollection(FeatureCollection originFeatureCollection, int precision){
+    public static FeatureCollection featureCollectionToGeohashBoundingFeatureCollection(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
-        List<String> geohashesString = GeohashUtil.featureCollectionToGeohash(separatedFeatureCollection, precision);
+        List<String> geohashesString = GeohashConvertor.featureCollectionToGeohash(separatedFeatureCollection, precision);
 
         List<GeoHash> geoHashes = new ArrayList<>();
         for(int i = 0; i < geohashesString.size(); i++){
@@ -69,5 +66,4 @@ public class FeatureCollectionConventorUtil {
 
         return boundingFeatureCollection;
     }
-
 }

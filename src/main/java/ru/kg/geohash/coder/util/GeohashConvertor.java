@@ -14,7 +14,7 @@ import java.util.List;
 
 
 
-public class GeohashUtil {
+class GeohashConvertor {
     private static final int MAX_DEPTH = 10000;
     private static final int LATITUDE_MAX_VALUE = 90;
     private static final int LONGITUDE_MAX_VALUE = 180;
