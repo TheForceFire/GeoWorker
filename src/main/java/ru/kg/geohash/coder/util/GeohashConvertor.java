@@ -82,6 +82,8 @@ class GeohashConvertor {
                 if(!geoHashesString.contains(currentGeohash.toBase32())){
                     geoHashesString.add(currentGeohash.toBase32());
 
+                    List<String> geoHashesStringBeforeFindings = new ArrayList<>(geoHashesString);
+
                     geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour(), currentDepth + 1);
 
                     geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour(), currentDepth + 1);
@@ -89,6 +91,19 @@ class GeohashConvertor {
                     geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour(), currentDepth + 1);
 
                     geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour(), currentDepth + 1);
+
+
+
+                    if(geoHashesString.equals(geoHashesStringBeforeFindings)) {
+
+                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour().getSouthernNeighbour(), currentDepth + 1);
+
+                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour().getEasternNeighbour(), currentDepth + 1);
+
+                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour().getNorthernNeighbour(), currentDepth + 1);
+
+                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour().getWesternNeighbour(), currentDepth + 1);
+                    }
                 }
             }
         }
