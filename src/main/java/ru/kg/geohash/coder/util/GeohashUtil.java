@@ -11,7 +11,7 @@ import ru.kg.geojson.separator.util.GeoJsonUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GeoHashUtil {
+public class GeohashUtil {
     public static List<String> featureCollectionToSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
         List<String> geohashes = GeohashConvertor.featureCollectionToGeohash(separatedFeatureCollection, precision);
@@ -65,5 +65,26 @@ public class GeoHashUtil {
         }
 
         return boundingFeatureCollection;
+    }
+
+    public static boolean compareGeohashStringLists(List<String> geohashStringList1, List<String> geohashStringList2){
+        boolean isEquals = true;
+
+        if(geohashStringList1.size() != geohashStringList2.size()){
+            isEquals = false;
+        }
+        if(isEquals){
+            int i = 0;
+
+            while (i < geohashStringList1.size() && isEquals){
+                if(!geohashStringList1.contains(geohashStringList2.get(i))){
+                    isEquals = false;
+                }
+
+                i++;
+            }
+        }
+
+        return isEquals;
     }
 }
