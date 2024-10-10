@@ -57,9 +57,38 @@ class GeohashConvertor {
                 baitLngLatAlt.setLongitude(listPolygon.get(i).getLongitude() - longitudeError);
             }
 
-            String baitGeoHash = GeoHash.geoHashStringWithCharacterPrecision(baitLngLatAlt.getLatitude(), baitLngLatAlt.getLongitude(), precision);
+            String baitGeoHashString = GeoHash.geoHashStringWithCharacterPrecision(baitLngLatAlt.getLatitude(), baitLngLatAlt.getLongitude(), precision);
+            GeoHash baitGeoHash = GeoHash.fromGeohashString(baitGeoHashString);
 
-            geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, GeoHash.fromGeohashString(baitGeoHash), 0);
+
+            geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash, 0);
+
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour(), 0);
+            }
+
+
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour().getSouthernNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour().getEasternNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour().getNorthernNeighbour(), 0);
+            }
+            if(geoHashes.size() == 0){
+                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour().getWesternNeighbour(), 0);
+            }
 
             i++;
         }

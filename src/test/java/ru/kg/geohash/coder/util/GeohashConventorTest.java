@@ -32,7 +32,7 @@ public class GeohashConventorTest {
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = actualGeohashList.equals(expectedGeohashList);
+            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{
@@ -56,7 +56,7 @@ public class GeohashConventorTest {
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = actualGeohashList.equals(expectedGeohashList);
+            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{
@@ -80,7 +80,7 @@ public class GeohashConventorTest {
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = actualGeohashList.equals(expectedGeohashList);
+            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{
@@ -104,7 +104,7 @@ public class GeohashConventorTest {
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = actualGeohashList.equals(expectedGeohashList);
+            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{
