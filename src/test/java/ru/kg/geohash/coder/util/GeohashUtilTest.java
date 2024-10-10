@@ -25,7 +25,7 @@ public class GeohashUtilTest {
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
             inputStreamMapFile.close();
 
-            List<String> actualGeohashList = GeohashUtil.featureCollectionToSingleGeohashList(inputFeatureCollection, 3);
+            List<String> actualGeohashList = GeohashUtil.separateFeatureCollectionAndToSingleGeohashList(inputFeatureCollection, 3);
 
             List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
@@ -49,7 +49,7 @@ public class GeohashUtilTest {
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
             inputStreamMapFile.close();
 
-            List<String> actualGeohashList = GeohashUtil.featureCollectionToSingleGeohashList(inputFeatureCollection, 4);
+            List<String> actualGeohashList = GeohashUtil.separateFeatureCollectionAndToSingleGeohashList(inputFeatureCollection, 4);
 
             List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();

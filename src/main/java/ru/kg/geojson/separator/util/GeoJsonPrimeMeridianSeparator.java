@@ -1,23 +1,50 @@
 package ru.kg.geojson.separator.util;
 
-import org.geojson.Feature;
-import org.geojson.FeatureCollection;
-import org.geojson.LngLatAlt;
-import org.geojson.Polygon;
+import org.geojson.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 class GeoJsonPrimeMeridianSeparator {
 
-    public static FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
-        PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);
+    public static FeatureCollection separatePrimeMeridian(FeatureCollection originFeatureCollection, int featureIndex){
+        /*PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);
         FeatureCollection primeMeridianFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
+        return primeMeridianFeatureCollection;*/
+
+        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
+
+        GeoJsonObject featureGeoJsonObject = originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
+        Class<? extends GeoJsonObject> objectType = featureGeoJsonObject.getClass();
+
+        if(objectType.getSimpleName().equals("Polygon")){
+            Polygon originPolygon = (Polygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
+            List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
+
+            PolygonsListSeparated separatedLists = setPolygonsListSeparated(originPoints);
+            List<Feature> separatedFeatures = getPolygonsToFeatures(separatedLists);
+            for(int i = 0; i < separatedFeatures.size(); i++) {
+                primeMeridianFeatureCollection.add(separatedFeatures.get(i));
+            }
+        }
+        else if(objectType.getSimpleName().equals("MultiPolygon")){
+            MultiPolygon originMultiPolygon = (MultiPolygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
+            List<List<List<LngLatAlt>>> originPointsList = originMultiPolygon.getCoordinates();
+
+            for(int i = 0; i < originPointsList.size(); i++){
+                PolygonsListSeparated separatedLists = setPolygonsListSeparated(originPointsList.get(i).get(0));
+                List<Feature> separatedFeatures = getPolygonsToFeatures(separatedLists);
+                for(int j = 0; j < separatedFeatures.size(); j++) {
+                    primeMeridianFeatureCollection.add(separatedFeatures.get(j));
+                }
+            }
+        }
+
         return primeMeridianFeatureCollection;
     }
 
-    private static PolygonsListSeparated setPolygonsListSeparated(FeatureCollection featureCollection, int featureIndex){
-        List<LngLatAlt> separatedPoints = calculateZeroCoordinates(featureCollection, featureIndex);
+    private static PolygonsListSeparated setPolygonsListSeparated(List<LngLatAlt> originPoints){
+        List<LngLatAlt> separatedPoints = calculateZeroCoordinates(originPoints);
         PolygonPlusMinusLists polygonPlusMinusLists = divideListBySign(separatedPoints);
 
         PolygonsListSeparated separatedLists = new PolygonsListSeparated();
@@ -26,10 +53,8 @@ class GeoJsonPrimeMeridianSeparator {
 
         return separatedLists;
     }
-    private static List<LngLatAlt> calculateZeroCoordinates(FeatureCollection featureCollection, int featureIndex){
+    private static List<LngLatAlt> calculateZeroCoordinates(List<LngLatAlt> originPoints){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
-        Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
-        List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
         double sign;
         sign = Math.signum(originPoints.get(0).getLongitude());
@@ -225,17 +250,17 @@ class GeoJsonPrimeMeridianSeparator {
         return finalLatitude;
     }
 
-    private static FeatureCollection getPolygonsToFeatureCollection(PolygonsListSeparated separatedLists){
-        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
+    private static List<Feature> getPolygonsToFeatures(PolygonsListSeparated separatedLists){
+        List<Feature> equatorFeature = new ArrayList<>();
 
         for(int i = 0; i < separatedLists.size(); i++){
             Polygon polygon = new Polygon();
             polygon.setExteriorRing(separatedLists.getPolygonList(i));
             Feature feature = new Feature();
             feature.setGeometry(polygon);
-            primeMeridianFeatureCollection.add(feature);
+            equatorFeature.add(feature);
         }
 
-        return primeMeridianFeatureCollection;
+        return equatorFeature;
     }
 }

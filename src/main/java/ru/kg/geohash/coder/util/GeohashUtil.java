@@ -12,14 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GeohashUtil {
-    public static List<String> featureCollectionToSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
+    public static List<String> separateFeatureCollectionAndToSingleGeohashList(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
         List<String> geohashes = GeohashConvertor.featureCollectionToGeohash(separatedFeatureCollection, precision);
 
         return geohashes;
     }
 
-    public static List<List<String>> featureCollectionToMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
+    public static List<List<String>> separateFeatureCollectionAndToMultipleGeohashLists(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
 
         List<List<String>> geohashesList = new ArrayList<>();
@@ -34,7 +34,7 @@ public class GeohashUtil {
         return geohashesList;
     }
 
-    public static FeatureCollection featureCollectionToGeohashBoundingFeatureCollection(FeatureCollection originFeatureCollection, int precision){
+    public static FeatureCollection separateFeatureCollectionAndToGeohashBoundingFeatureCollection(FeatureCollection originFeatureCollection, int precision){
         FeatureCollection separatedFeatureCollection = GeoJsonUtil.separateGeoJson(originFeatureCollection);
         List<String> geohashesString = GeohashConvertor.featureCollectionToGeohash(separatedFeatureCollection, precision);
 
