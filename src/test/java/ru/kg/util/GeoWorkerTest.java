@@ -1,7 +1,8 @@
-package ru.kg.geohash.coder.util;
+package ru.kg.util;
 
 import org.geojson.FeatureCollection;
 import org.junit.jupiter.api.Test;
+import ru.kg.geohash.coder.util.GeoHashUtil;
 import ru.kg.io.GeoJsonFileManager;
 
 import java.io.BufferedReader;
@@ -13,25 +14,25 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GeohashUtilTest {
+public class GeoWorkerTest {
 
     @Test
     void geoJsonToSeparatedToGeohashTest1() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1.json");
-        InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1Expected.txt");
+        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map1.json");
+        InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map1Expected.txt");
 
         if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
             inputStreamMapFile.close();
 
-            List<String> actualGeohashList = GeohashUtil.separateFeatureCollectionAndToSingleGeohashList(inputFeatureCollection, 3);
+            List<String> actualGeohashList = GeoWorkerUtil.separateFeatureCollectionAndToSingleGeoHashList(inputFeatureCollection, 3);
 
             List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
+            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{
@@ -41,21 +42,21 @@ public class GeohashUtilTest {
 
     @Test
     void geoJsonToSeparatedToGeohashTest2() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2SamObl.json");
-        InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2SamOblExpected.txt");
+        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map2SamObl.json");
+        InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map2SamOblExpected.txt");
 
         if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
             inputStreamMapFile.close();
 
-            List<String> actualGeohashList = GeohashUtil.separateFeatureCollectionAndToSingleGeohashList(inputFeatureCollection, 4);
+            List<String> actualGeohashList = GeoWorkerUtil.separateFeatureCollectionAndToSingleGeoHashList(inputFeatureCollection, 4);
 
             List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
                     .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
             inputStreamExpectedMapFile.close();
 
-            boolean isEquals = GeohashUtil.compareGeohashStringLists(actualGeohashList, expectedGeohashList);
+            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
             assertTrue(isEquals, "Feature collections are not the same!");
         }
         else{

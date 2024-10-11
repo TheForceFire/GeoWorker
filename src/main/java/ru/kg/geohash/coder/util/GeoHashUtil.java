@@ -14,25 +14,25 @@ import java.util.List;
 
 
 
-class GeohashConvertor {
+public class GeoHashUtil {
     private static final int MAX_DEPTH = 10000;
     private static final int LATITUDE_MAX_VALUE = 90;
     private static final int LONGITUDE_MAX_VALUE = 180;
 
-    public static List<String> featureCollectionToGeohash(FeatureCollection featureCollection, int precision){
+    public static List<String> featureCollectionToGeoHash(FeatureCollection featureCollection, int precision){
         List<String> geoHashes = new ArrayList<>();
 
         for(int i = 0; i < featureCollection.getFeatures().size(); i++){
             Polygon polygon = (Polygon) featureCollection.getFeatures().get(i).getGeometry();
             List<LngLatAlt> listPolygon = polygon.getExteriorRing();
 
-            geoHashes.addAll(calculateGeohashList(listPolygon, precision));
+            geoHashes.addAll(calculateGeoHashList(listPolygon, precision));
         }
 
         return geoHashes;
     }
 
-    private static List<String> calculateGeohashList(List<LngLatAlt> listPolygon, int precision){
+    private static List<String> calculateGeoHashList(List<LngLatAlt> listPolygon, int precision){
         double latitudeError = getLatitudeError(precision);
         double longitudeError = getLongitudeError(precision);
 
@@ -61,33 +61,33 @@ class GeohashConvertor {
             GeoHash baitGeoHash = GeoHash.fromGeohashString(baitGeoHashString);
 
 
-            geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash, 0);
+            geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash, 0);
 
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour(), 0);
             }
 
 
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour().getSouthernNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getEasternNeighbour().getSouthernNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour().getEasternNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getNorthernNeighbour().getEasternNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour().getNorthernNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getWesternNeighbour().getNorthernNeighbour(), 0);
             }
             if(geoHashes.size() == 0){
-                geoHashes = findAllGeohashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour().getWesternNeighbour(), 0);
+                geoHashes = findAllGeoHashesRecursion(new ArrayList<>(), geometryPolygon, baitGeoHash.getSouthernNeighbour().getWesternNeighbour(), 0);
             }
 
             i++;
@@ -96,7 +96,7 @@ class GeohashConvertor {
         return geoHashes;
     }
 
-    private static List<String> findAllGeohashesRecursion(List<String> geoHashesString, org.locationtech.jts.geom.Polygon geometryPolygon,
+    private static List<String> findAllGeoHashesRecursion(List<String> geoHashesString, org.locationtech.jts.geom.Polygon geometryPolygon,
                                                           GeoHash currentGeohash, int currentDepth){
 
         if(currentDepth < MAX_DEPTH){
@@ -113,25 +113,25 @@ class GeohashConvertor {
 
                     List<String> geoHashesStringBeforeFindings = new ArrayList<>(geoHashesString);
 
-                    geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour(), currentDepth + 1);
+                    geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour(), currentDepth + 1);
 
-                    geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour(), currentDepth + 1);
+                    geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour(), currentDepth + 1);
 
-                    geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour(), currentDepth + 1);
+                    geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour(), currentDepth + 1);
 
-                    geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour(), currentDepth + 1);
+                    geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour(), currentDepth + 1);
 
 
 
                     if(geoHashesString.equals(geoHashesStringBeforeFindings)) {
 
-                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour().getSouthernNeighbour(), currentDepth + 1);
+                        geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getEasternNeighbour().getSouthernNeighbour(), currentDepth + 1);
 
-                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour().getEasternNeighbour(), currentDepth + 1);
+                        geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getNorthernNeighbour().getEasternNeighbour(), currentDepth + 1);
 
-                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour().getNorthernNeighbour(), currentDepth + 1);
+                        geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getWesternNeighbour().getNorthernNeighbour(), currentDepth + 1);
 
-                        geoHashesString = findAllGeohashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour().getWesternNeighbour(), currentDepth + 1);
+                        geoHashesString = findAllGeoHashesRecursion(geoHashesString, geometryPolygon, currentGeohash.getSouthernNeighbour().getWesternNeighbour(), currentDepth + 1);
                     }
                 }
             }
@@ -211,4 +211,24 @@ class GeohashConvertor {
         return errorValue;
     }
 
+    public static boolean compareGeoHashStringLists(List<String> geoHashStringList1, List<String> geoHashStringList2){
+        boolean isEquals = true;
+
+        if(geoHashStringList1.size() != geoHashStringList2.size()){
+            isEquals = false;
+        }
+        if(isEquals){
+            int i = 0;
+
+            while (i < geoHashStringList1.size() && isEquals){
+                if(!geoHashStringList1.contains(geoHashStringList2.get(i))){
+                    isEquals = false;
+                }
+
+                i++;
+            }
+        }
+
+        return isEquals;
+    }
 }
