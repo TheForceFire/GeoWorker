@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeoWorkerTest {
 
     @Test
-    void geoJsonToSeparatedToGeohashTest1() throws IOException {
+    void geoJsonToSeparatedToGeoHashTest1() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map1.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map1Expected.txt");
 
@@ -41,7 +41,7 @@ public class GeoWorkerTest {
     }
 
     @Test
-    void geoJsonToSeparatedToGeohashTest2() throws IOException {
+    void geoJsonToSeparatedToGeoHashTest2() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map2SamObl.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geoWorkerUtilTest/Map2SamOblExpected.txt");
 

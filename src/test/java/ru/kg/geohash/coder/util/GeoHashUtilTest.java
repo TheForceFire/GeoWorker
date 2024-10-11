@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeoHashUtilTest {
 
     @Test
-    void geoJsonToGeohashTest1() throws IOException {
+    void geoJsonToGeoHashTest1() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1Expected.txt");
 
@@ -40,7 +40,7 @@ public class GeoHashUtilTest {
     }
 
     @Test
-    void geoJsonToGeohashTest2() throws IOException {
+    void geoJsonToGeoHashTest2() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2Expected.txt");
 
@@ -64,7 +64,7 @@ public class GeoHashUtilTest {
     }
 
     @Test
-    void geoJsonToGeohashTest3() throws IOException {
+    void geoJsonToGeoHashTest3() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map3.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map3Expected.txt");
 
@@ -88,7 +88,7 @@ public class GeoHashUtilTest {
     }
 
     @Test
-    void geoJsonToGeohashTest4() throws IOException {
+    void geoJsonToGeoHashTest4() throws IOException {
         InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map4.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map4Expected.txt");
 
