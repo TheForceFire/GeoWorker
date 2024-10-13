@@ -1,4 +1,4 @@
-package ru.kg.geojson.separator.io;
+package ru.kg.io;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.geojson.FeatureCollection;
