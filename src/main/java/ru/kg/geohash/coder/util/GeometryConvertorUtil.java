@@ -45,14 +45,14 @@ class GeometryConvertorUtil {
         return coordinate;
     }
 
-    public static LineString geohashListToLineString(List<GeoHash> geoHashes){
+    public static LineString geohashLineToLineString(GeoHash firstGeoHash, GeoHash lastGeoHash){
         LngLatAlt firstLngLatAlt = new LngLatAlt();
-        firstLngLatAlt.setLatitude(geoHashes.get(0).getOriginatingPoint().getLatitude());
-        firstLngLatAlt.setLongitude(geoHashes.get(0).getOriginatingPoint().getLongitude());
+        firstLngLatAlt.setLatitude(firstGeoHash.getOriginatingPoint().getLatitude());
+        firstLngLatAlt.setLongitude(firstGeoHash.getOriginatingPoint().getLongitude());
 
         LngLatAlt secondLngLatAlt = new LngLatAlt();
-        secondLngLatAlt.setLatitude(geoHashes.get(geoHashes.size() - 1).getOriginatingPoint().getLatitude());
-        secondLngLatAlt.setLongitude(geoHashes.get(geoHashes.size() - 1).getOriginatingPoint().getLongitude());
+        secondLngLatAlt.setLatitude(lastGeoHash.getOriginatingPoint().getLatitude());
+        secondLngLatAlt.setLongitude(lastGeoHash.getOriginatingPoint().getLongitude());
 
         List<LngLatAlt> geoHashLineList = new ArrayList<>();
         geoHashLineList.add(firstLngLatAlt);
