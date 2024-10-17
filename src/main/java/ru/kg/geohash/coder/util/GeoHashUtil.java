@@ -1,127 +1,219 @@
 package ru.kg.geohash.coder.util;
 
 import ch.hsr.geohash.GeoHash;
-import org.geojson.FeatureCollection;
-import org.geojson.LngLatAlt;
+import ch.hsr.geohash.WGS84Point;
+import org.geojson.*;
+import org.geojson.MultiPolygon;
 import org.geojson.Polygon;
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Point;
 
 
-import java.util.LinkedHashSet;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
 
 
 public class GeoHashUtil {
 
     public static List<String> featureCollectionToGeoHash(FeatureCollection featureCollection, int precision){
-        List<String> geoHashes = new ArrayList<>();
+        Set<String> geoHashesSet = new HashSet<>();
+        featureCollection = transformFeatureCollectionMultiPolygonsToPolygons(featureCollection);
 
         for(int i = 0; i < featureCollection.getFeatures().size(); i++){
             Polygon polygon = (Polygon) featureCollection.getFeatures().get(i).getGeometry();
             List<LngLatAlt> listPolygon = polygon.getExteriorRing();
 
-            geoHashes.addAll(calculateGeoHashList(listPolygon, precision));
+            geoHashesSet.addAll(calculateGeoHashList(listPolygon, precision));
         }
 
+        List<String> geoHashes = new ArrayList<>(geoHashesSet);
         return geoHashes;
     }
 
-    private static List<String> calculateGeoHashList(List<LngLatAlt> listPolygon, int precision){
-        List<String> geoHashesStringList = new ArrayList<>();
+    private static FeatureCollection transformFeatureCollectionMultiPolygonsToPolygons(FeatureCollection originFeatureCollection){
+        FeatureCollection finalFeatureCollection = new FeatureCollection();
 
-        if(listPolygon.size() > 0) {
-            org.locationtech.jts.geom.Polygon geometryPolygon = GeometryConvertorUtil.lngLatAltListToGeometryPolygon(listPolygon);
+        for(int i = 0; i < originFeatureCollection.getFeatures().size(); i++) {
+            GeoJsonObject featureGeoJsonObject = originFeatureCollection.getFeatures().get(i).getGeometry();
+            Class<? extends GeoJsonObject> objectType = featureGeoJsonObject.getClass();
 
-            LinkedHashSet<GeoHash> geoHashSet = new LinkedHashSet<>(findFirstEntry(listPolygon, geometryPolygon, precision));
+            if (objectType.getSimpleName().equals("Polygon")) {
+                finalFeatureCollection.add(originFeatureCollection.getFeatures().get(i));
+            }
+            else if (objectType.getSimpleName().equals("MultiPolygon")) {
+                org.geojson.MultiPolygon originMultiPolygon = (MultiPolygon) originFeatureCollection.getFeatures().get(i).getGeometry();
+                List<List<List<LngLatAlt>>> originPointsList = originMultiPolygon.getCoordinates();
 
-            int indexesToSkip = 0;
-            boolean hasNewGeoHashes = true;
-            while (hasNewGeoHashes) {
-                hasNewGeoHashes = false;
-                int setSize = geoHashSet.size();
+                for(int j = 0; j < originPointsList.size(); j++){
+                    Feature featureToAdd = new Feature();
+                    Polygon polygonToAdd = new Polygon();
+                    polygonToAdd.setExteriorRing(originPointsList.get(j).get(0));
+                    featureToAdd.setGeometry(polygonToAdd);
 
-                int i = 0;
-                for (GeoHash geoHashToCheck : new LinkedHashSet<>(geoHashSet)) {
-                    if(i < indexesToSkip){
-                        i++;
-                    }
-                    else {
-                        if (!geoHashSet.contains(geoHashToCheck.getEasternNeighbour()) && isGeoHashInLandArea(geometryPolygon, geoHashToCheck.getEasternNeighbour())) {
-                            geoHashSet.add(geoHashToCheck.getEasternNeighbour());
-                            geoHashSet.addAll(FastForwardUtil.fastForwardEast(geoHashToCheck.getEasternNeighbour(), geometryPolygon));
-                            hasNewGeoHashes = true;
-                        }
-                        if (!geoHashSet.contains(geoHashToCheck.getNorthernNeighbour()) && isGeoHashInLandArea(geometryPolygon, geoHashToCheck.getNorthernNeighbour())) {
-                            geoHashSet.add(geoHashToCheck.getNorthernNeighbour());
-                            geoHashSet.addAll(FastForwardUtil.fastForwardNorth(geoHashToCheck.getNorthernNeighbour(), geometryPolygon));
-                            hasNewGeoHashes = true;
-                        }
-                        if (!geoHashSet.contains(geoHashToCheck.getSouthernNeighbour()) && isGeoHashInLandArea(geometryPolygon, geoHashToCheck.getSouthernNeighbour())) {
-                            geoHashSet.add(geoHashToCheck.getSouthernNeighbour());
-                            geoHashSet.addAll(FastForwardUtil.fastForwardSouth(geoHashToCheck.getSouthernNeighbour(), geometryPolygon));
-                            hasNewGeoHashes = true;
-                        }
-                        if (!geoHashSet.contains(geoHashToCheck.getWesternNeighbour()) && isGeoHashInLandArea(geometryPolygon, geoHashToCheck.getWesternNeighbour())) {
-                            geoHashSet.add(geoHashToCheck.getWesternNeighbour());
-                            geoHashSet.addAll(FastForwardUtil.fastForwardWest(geoHashToCheck.getWesternNeighbour(), geometryPolygon));
-                            hasNewGeoHashes = true;
-                        }
-                    }
+                    finalFeatureCollection.add(featureToAdd);
                 }
 
-                indexesToSkip = setSize;
+            }
+        }
+
+        return finalFeatureCollection;
+    }
+
+    private static Set<String> calculateGeoHashList(List<LngLatAlt> listPolygon, int precision){
+        Set<String> geoHashesStringList = new HashSet<>();
+
+        if(listPolygon.size() > 0) {
+            org.locationtech.jts.geom.Polygon geometryPolygon  = GeometryConvertorUtil.lngLatAltListToGeometryPolygon(listPolygon);
+            LinkedHashSet<GeoHash> geoHashSetPerimeter = findPerimeter(listPolygon, geometryPolygon, precision);
+
+            LinkedHashSet<GeoHash> geoHashSetInside = new LinkedHashSet<>();
+            for(GeoHash geoHashToCheck : geoHashSetPerimeter){
+
+                GeoHash geoHashEastern = geoHashToCheck.getEasternNeighbour();
+                if(!geoHashSetPerimeter.contains(geoHashEastern) && isGeoHashInLandArea(geometryPolygon, geoHashEastern)){
+                    geoHashSetInside.add(geoHashEastern);
+                    geoHashSetInside.addAll(FastForwardUtil.fastForwardEast(geoHashSetPerimeter, geoHashEastern));
+                }
+
+                GeoHash geoHashNorthern = geoHashToCheck.getNorthernNeighbour();
+                if(!geoHashSetPerimeter.contains(geoHashNorthern) && isGeoHashInLandArea(geometryPolygon, geoHashNorthern)){
+                    geoHashSetInside.add(geoHashNorthern);
+                    geoHashSetInside.addAll(FastForwardUtil.fastForwardNorth(geoHashSetPerimeter, geoHashNorthern));
+                }
+
+                GeoHash geoHashSouthern = geoHashToCheck.getSouthernNeighbour();
+                if(!geoHashSetPerimeter.contains(geoHashSouthern) && isGeoHashInLandArea(geometryPolygon, geoHashSouthern)){
+                    geoHashSetInside.add(geoHashSouthern);
+                    geoHashSetInside.addAll(FastForwardUtil.fastForwardSouth(geoHashSetPerimeter, geoHashSouthern));
+                }
+
+                GeoHash geoHashWestern = geoHashToCheck.getWesternNeighbour();
+                if(!geoHashSetPerimeter.contains(geoHashWestern) && isGeoHashInLandArea(geometryPolygon, geoHashWestern)){
+                    geoHashSetInside.add(geoHashWestern);
+                    geoHashSetInside.addAll(FastForwardUtil.fastForwardWest(geoHashSetPerimeter, geoHashWestern));
+                }
+
             }
 
-            geoHashesStringList = geoHashSetToGeoHashStringList(geoHashSet);
+            LinkedHashSet<GeoHash> geoHashSetUnited = new LinkedHashSet<>();
+            geoHashSetUnited.addAll(geoHashSetPerimeter);
+            geoHashSetUnited.addAll(geoHashSetInside);
+            geoHashesStringList = geoHashSetToGeoHashStringSet(geoHashSetUnited);
         }
 
         return geoHashesStringList;
     }
 
-    private static LinkedHashSet<GeoHash> findFirstEntry(List<LngLatAlt> listPolygon, org.locationtech.jts.geom.Polygon geometryPolygon, int precision){
+    private static LinkedHashSet<GeoHash> findPerimeter(List<LngLatAlt> listPolygon, org.locationtech.jts.geom.Polygon geometryPolygon, int precision){
+        LinkedHashSet<GeoHash> geoHashPerimeter = new LinkedHashSet<>();
+
+        String currentGeoHashString = GeoHash.geoHashStringWithCharacterPrecision(listPolygon.get(0).getLatitude(), listPolygon.get(0).getLongitude(), precision);
+        GeoHash currentGeoHash = GeoHash.fromGeohashString(currentGeoHashString);
+        geoHashPerimeter.add(currentGeoHash);
+
+        for(int i = 1; i < listPolygon.size(); i++){
+            String nextGeoHashString = GeoHash.geoHashStringWithCharacterPrecision(listPolygon.get(i).getLatitude(), listPolygon.get(i).getLongitude(), precision);
+            GeoHash nextGeoHash = GeoHash.fromGeohashString(nextGeoHashString);
+
+            geoHashPerimeter.addAll(fillGeoHashGap(currentGeoHash, nextGeoHash, geometryPolygon, geoHashPerimeter));
+            currentGeoHash = nextGeoHash;
+        }
+
+        return geoHashPerimeter;
+    }
+
+    private static Set<GeoHash> fillGeoHashGap(GeoHash currentGeoHash, GeoHash nextGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon, LinkedHashSet<GeoHash> geoHashPerimeter){
         LinkedHashSet<GeoHash> geoHashSet = new LinkedHashSet<>();
 
-        int j = 0;
-        do {
-            String baitGeoHashString = GeoHash.geoHashStringWithCharacterPrecision(listPolygon.get(j).getLatitude(), listPolygon.get(j).getLongitude(), precision);
-            GeoHash baitGeoHash = GeoHash.fromGeohashString(baitGeoHashString);
+        if(!currentGeoHash.equals(nextGeoHash)) {
+            GeoHash[] neighboursCurrentGeoHash = currentGeoHash.getAdjacent();
+            if (isGeoHashArrayContainsGeoHash(neighboursCurrentGeoHash, nextGeoHash)) {
+                geoHashSet.add(nextGeoHash);
+            } else {
+                WGS84Point currentGeoHashPoint = currentGeoHash.getBoundingBoxCenter();
+                WGS84Point nextGeoHashPoint = nextGeoHash.getBoundingBoxCenter();
 
-            if (isGeoHashInLandArea(geometryPolygon, baitGeoHash)) {
-                geoHashSet.add(baitGeoHash);
-            }
-            if (isGeoHashInLandArea(geometryPolygon, baitGeoHash.getEasternNeighbour())) {
-                geoHashSet.add(baitGeoHash.getEasternNeighbour());
-                geoHashSet.addAll(FastForwardUtil.fastForwardEast(baitGeoHash.getEasternNeighbour(), geometryPolygon));
-            }
-            if (isGeoHashInLandArea(geometryPolygon, baitGeoHash.getNorthernNeighbour())) {
-                geoHashSet.add(baitGeoHash.getNorthernNeighbour());
-                geoHashSet.addAll(FastForwardUtil.fastForwardNorth(baitGeoHash.getNorthernNeighbour(), geometryPolygon));
-            }
-            if (isGeoHashInLandArea(geometryPolygon, baitGeoHash.getSouthernNeighbour())) {
-                geoHashSet.add(baitGeoHash.getSouthernNeighbour());
-                geoHashSet.addAll(FastForwardUtil.fastForwardSouth(baitGeoHash.getSouthernNeighbour(), geometryPolygon));
-            }
-            if (isGeoHashInLandArea(geometryPolygon, baitGeoHash.getWesternNeighbour())) {
-                geoHashSet.add(baitGeoHash.getWesternNeighbour());
-                geoHashSet.addAll(FastForwardUtil.fastForwardWest(baitGeoHash.getWesternNeighbour(), geometryPolygon));
-            }
+                LatitudeDirection latitudeDirection = setLatitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
+                LongitudeDirection longitudeDirection = setLongitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
 
-            j++;
+                do {
+                    currentGeoHash = moveGeoHashByDirections(currentGeoHash, geometryPolygon, latitudeDirection, longitudeDirection, geoHashPerimeter);
+
+                    currentGeoHashPoint = currentGeoHash.getBoundingBoxCenter();
+                    latitudeDirection = setLatitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
+                    longitudeDirection = setLongitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
+
+                    neighboursCurrentGeoHash = currentGeoHash.getAdjacent();
+                    geoHashSet.add(currentGeoHash);
+                }
+                while (!isGeoHashArrayContainsGeoHash(neighboursCurrentGeoHash, nextGeoHash));
+
+                geoHashSet.add(nextGeoHash);
+            }
         }
-        while(geoHashSet.size() == 0 && j < listPolygon.size());
 
         return geoHashSet;
     }
 
-    private static List<String> geoHashSetToGeoHashStringList(LinkedHashSet<GeoHash> geoHashSet){
-        List<String> geoHashStringList = new ArrayList<>();
-
-        for (GeoHash geoHashToConvert : geoHashSet){
-            geoHashStringList.add(geoHashToConvert.toBase32());
+    private static LatitudeDirection setLatitudeDirection(WGS84Point currentGeoHashPoint, WGS84Point nextGeoHashPoint){
+        LatitudeDirection latitudeDirection;
+        if (currentGeoHashPoint.getLatitude() > nextGeoHashPoint.getLatitude()) {
+            latitudeDirection = LatitudeDirection.South;
+        }
+        else if (currentGeoHashPoint.getLatitude() < nextGeoHashPoint.getLatitude()) {
+            latitudeDirection = LatitudeDirection.North;
+        }
+        else{
+            latitudeDirection = LatitudeDirection.Same;
         }
 
-        return geoHashStringList;
+        return latitudeDirection;
+    }
+
+    private static LongitudeDirection setLongitudeDirection(WGS84Point currentGeoHashPoint, WGS84Point nextGeoHashPoint){
+        LongitudeDirection longitudeDirection;
+        if (currentGeoHashPoint.getLongitude() > nextGeoHashPoint.getLongitude()) {
+            longitudeDirection = LongitudeDirection.West;
+        }
+        else if (currentGeoHashPoint.getLongitude() < nextGeoHashPoint.getLongitude()){
+            longitudeDirection = LongitudeDirection.East;
+        }
+        else{
+            longitudeDirection = LongitudeDirection.Same;
+        }
+
+        return longitudeDirection;
+    }
+
+
+    private static GeoHash moveGeoHashByDirections(GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon,
+                                            LatitudeDirection latitudeDirection, LongitudeDirection longitudeDirection, LinkedHashSet<GeoHash> geoHashPerimeter){
+        GeoHash geoHashToReturn;
+
+        if(latitudeDirection == LatitudeDirection.Same){
+            geoHashToReturn = DirectionMoverUtil.moveLatSame(longitudeDirection, currentGeoHash);
+        }
+        else if(longitudeDirection == LongitudeDirection.Same){
+            geoHashToReturn = DirectionMoverUtil.moveLonSame(latitudeDirection, currentGeoHash);
+        }
+        else{
+
+            if(latitudeDirection == LatitudeDirection.North && longitudeDirection == LongitudeDirection.East){
+                geoHashToReturn = DirectionMoverUtil.moveNorthEast(geoHashPerimeter, currentGeoHash, geometryPolygon);
+            }
+            else if(latitudeDirection == LatitudeDirection.North && longitudeDirection == LongitudeDirection.West){
+                geoHashToReturn = DirectionMoverUtil.moveNorthWest(geoHashPerimeter, currentGeoHash, geometryPolygon);
+            }
+
+            else if(latitudeDirection == LatitudeDirection.South && longitudeDirection == LongitudeDirection.East){
+                geoHashToReturn = DirectionMoverUtil.moveSouthEast(geoHashPerimeter, currentGeoHash, geometryPolygon);
+            }
+            else{
+                geoHashToReturn = DirectionMoverUtil.moveSouthWest(geoHashPerimeter, currentGeoHash, geometryPolygon);
+            }
+
+        }
+
+        return geoHashToReturn;
     }
 
     private static boolean isGeoHashInLandArea(org.locationtech.jts.geom.Polygon geometryPolygon, GeoHash geoHash){
@@ -132,6 +224,31 @@ public class GeoHashUtil {
         Point currentPoint = GeometryConvertorUtil.lngLatAltToPoint(currentLngLatAlt);
         boolean isInPolygon = geometryPolygon.contains(currentPoint);
         return isInPolygon;
+    }
+
+    private static boolean isGeoHashArrayContainsGeoHash(GeoHash[] geoHashArray, GeoHash geoHash){
+        boolean isContains = false;
+
+        int i = 0;
+        while(i < geoHashArray.length && !isContains){
+            if(i % 2 == 0 && geoHashArray[i].equals(geoHash)){
+                isContains = true;
+            }
+
+            i++;
+        }
+
+        return isContains;
+    }
+
+    private static Set<String> geoHashSetToGeoHashStringSet(LinkedHashSet<GeoHash> geoHashSet){
+        Set<String> geoHashStringSet = new HashSet<>();
+
+        for (GeoHash geoHashToConvert : geoHashSet){
+            geoHashStringSet.add(geoHashToConvert.toBase32());
+        }
+
+        return geoHashStringSet;
     }
 
     public static boolean compareGeoHashStringLists(List<String> geoHashStringList1, List<String> geoHashStringList2){
