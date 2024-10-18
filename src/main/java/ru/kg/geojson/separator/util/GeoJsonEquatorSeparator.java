@@ -9,34 +9,10 @@ import java.util.List;
 class GeoJsonEquatorSeparator {
 
     public static FeatureCollection separateEquator(FeatureCollection originFeatureCollection, int featureIndex) {
-        FeatureCollection equatorFeatureCollection = new FeatureCollection();
-
-        GeoJsonObject featureGeoJsonObject = originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
-        Class<? extends GeoJsonObject> objectType = featureGeoJsonObject.getClass();
-
-        if(objectType.getSimpleName().equals("Polygon")){
-            Polygon originPolygon = (Polygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
-            List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
-
-            PolygonsListSeparated separatedLists = setPolygonsListSeparated(originPoints);
-            List<Feature> separatedFeatures = getPolygonsToFeatures(separatedLists);
-            for(int i = 0; i < separatedFeatures.size(); i++) {
-                equatorFeatureCollection.add(separatedFeatures.get(i));
-            }
-        }
-        else if(objectType.getSimpleName().equals("MultiPolygon")){
-            MultiPolygon originMultiPolygon = (MultiPolygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
-            List<List<List<LngLatAlt>>> originPointsList = originMultiPolygon.getCoordinates();
-
-            for(int i = 0; i < originPointsList.size(); i++){
-                PolygonsListSeparated separatedLists = setPolygonsListSeparated(originPointsList.get(i).get(0));
-                List<Feature> separatedFeatures = getPolygonsToFeatures(separatedLists);
-                for(int j = 0; j < separatedFeatures.size(); j++) {
-                    equatorFeatureCollection.add(separatedFeatures.get(j));
-                }
-            }
-        }
-
+        Polygon polygon = (Polygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
+        List<LngLatAlt> polygonList = polygon.getExteriorRing();
+        PolygonsListSeparated separatedLists = setPolygonsListSeparated(polygonList);
+        FeatureCollection equatorFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
         return equatorFeatureCollection;
     }
 
@@ -217,19 +193,21 @@ class GeoJsonEquatorSeparator {
     private static List<LngLatAlt> calculateZeroCoordinates(List<LngLatAlt> originPoints){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
 
-        double sign;
-        sign = Math.signum(originPoints.get(0).getLatitude());
-        separatedPoints.add(originPoints.get(0));
-        for(int i = 1; i < originPoints.size(); i++){
-            if(sign != Math.signum(originPoints.get(i).getLatitude())){
-                double longitude = getMedianLongitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
-                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
-                LngLatAlt separator = new LngLatAlt(longitude, 0);
+        if(originPoints.size() > 0) {
+            double sign;
+            sign = Math.signum(originPoints.get(0).getLatitude());
+            separatedPoints.add(originPoints.get(0));
+            for (int i = 1; i < originPoints.size(); i++) {
+                if (sign != Math.signum(originPoints.get(i).getLatitude())) {
+                    double longitude = getMedianLongitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
+                            originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
+                    LngLatAlt separator = new LngLatAlt(longitude, 0);
 
-                separatedPoints.add(separator);
-                sign = Math.signum(originPoints.get(i).getLatitude());
+                    separatedPoints.add(separator);
+                    sign = Math.signum(originPoints.get(i).getLatitude());
+                }
+                separatedPoints.add(originPoints.get(i));
             }
-            separatedPoints.add(originPoints.get(i));
         }
 
         return separatedPoints;
@@ -252,18 +230,18 @@ class GeoJsonEquatorSeparator {
 
         return finalLongitude;
     }
-    private static List<Feature> getPolygonsToFeatures(PolygonsListSeparated separatedLists){
-        List<Feature> equatorFeature = new ArrayList<>();
+    private static FeatureCollection getPolygonsToFeatureCollection(PolygonsListSeparated separatedLists){
+        FeatureCollection primeMeridianFeatureCollection = new FeatureCollection();
 
         for(int i = 0; i < separatedLists.size(); i++){
             Polygon polygon = new Polygon();
             polygon.setExteriorRing(separatedLists.getPolygonList(i));
             Feature feature = new Feature();
             feature.setGeometry(polygon);
-            equatorFeature.add(feature);
+            primeMeridianFeatureCollection.add(feature);
         }
 
-        return equatorFeature;
+        return primeMeridianFeatureCollection;
     }
 
 }
