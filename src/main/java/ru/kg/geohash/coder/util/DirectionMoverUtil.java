@@ -10,111 +10,127 @@ import java.util.List;
 
 class DirectionMoverUtil {
 
-    public static GeoHash moveLatSame(LongitudeDirection longitudeDirection, GeoHash currentGeoHash){
-        GeoHash geoHashToReturn;
+    public static List<GeoHash> moveLatSame(LongitudeDirection longitudeDirection, GeoHash currentGeoHash){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
 
         if(longitudeDirection == LongitudeDirection.West){
-            geoHashToReturn = currentGeoHash.getWesternNeighbour();
+            geoHashToReturn.add(currentGeoHash.getWesternNeighbour());
         }
         else{
-            geoHashToReturn = currentGeoHash.getEasternNeighbour();
+            geoHashToReturn.add(currentGeoHash.getEasternNeighbour());
         }
 
         return geoHashToReturn;
     }
 
-    public static GeoHash moveLonSame(LatitudeDirection latitudeDirection, GeoHash currentGeoHash){
-        GeoHash geoHashToReturn;
+    public static List<GeoHash> moveLonSame(LatitudeDirection latitudeDirection, GeoHash currentGeoHash){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
 
         if(latitudeDirection == LatitudeDirection.South){
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour();
+            geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
         }
         else{
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour();
+            geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
         }
 
         return geoHashToReturn;
     }
 
-    public static GeoHash moveNorthEast(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
-        GeoHash geoHashToReturn;
+    public static List<GeoHash> moveNorthEast(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
 
-        if(!geoHashPerimeter.contains(currentGeoHash.getNorthernNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour())){
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour();
+        boolean isBorderNorth = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour());
+        boolean isBorderEast = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getEasternNeighbour());
+
+        if(!geoHashPerimeter.contains(currentGeoHash.getEasternNeighbour()) && isBorderEast){
+            geoHashToReturn.add(currentGeoHash.getEasternNeighbour());
         }
-        else if(!geoHashPerimeter.contains(currentGeoHash.getEasternNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getEasternNeighbour())){
-            geoHashToReturn = currentGeoHash.getEasternNeighbour();
-        }
-        else if(isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour().getEasternNeighbour())){
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour().getEasternNeighbour();
-        }
-        else{
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour().getEasternNeighbour();
+        if(!geoHashPerimeter.contains(currentGeoHash.getNorthernNeighbour()) && isBorderNorth){
+            geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
         }
 
-        return geoHashToReturn;
-    }
-
-    public static GeoHash moveNorthWest(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
-        GeoHash geoHashToReturn;
-
-        if(!geoHashPerimeter.contains(currentGeoHash.getNorthernNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour())){
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour();
-        }
-        else if(!geoHashPerimeter.contains(currentGeoHash.getWesternNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getWesternNeighbour())){
-            geoHashToReturn = currentGeoHash.getWesternNeighbour();
-        }
-        else if(isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour().getWesternNeighbour())){
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour().getWesternNeighbour();
-        }
-        else{
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour().getWesternNeighbour();
+        if(geoHashToReturn.size() == 0){
+            if(isBorderEast){
+                geoHashToReturn.add(currentGeoHash.getEasternNeighbour());
+            }
+            if(isBorderNorth){
+                geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
+            }
         }
 
         return geoHashToReturn;
     }
 
-    public static GeoHash moveSouthEast(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
-        GeoHash geoHashToReturn;
+    public static List<GeoHash> moveNorthWest(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
 
-        if(!geoHashPerimeter.contains(currentGeoHash.getSouthernNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour())){
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour();
+        boolean isBorderNorth = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getNorthernNeighbour());
+        boolean isBorderWest = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getWesternNeighbour());
+
+        if(!geoHashPerimeter.contains(currentGeoHash.getWesternNeighbour()) && isBorderWest){
+            geoHashToReturn.add(currentGeoHash.getWesternNeighbour());
         }
-        else if(!geoHashPerimeter.contains(currentGeoHash.getEasternNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getEasternNeighbour())){
-            geoHashToReturn = currentGeoHash.getEasternNeighbour();
+        if(!geoHashPerimeter.contains(currentGeoHash.getNorthernNeighbour()) && isBorderNorth){
+            geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
         }
-        else if(isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour().getEasternNeighbour())){
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour().getEasternNeighbour();
-        }
-        else{
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour().getEasternNeighbour();
+
+        if(geoHashToReturn.size() == 0){
+            if(isBorderWest){
+                geoHashToReturn.add(currentGeoHash.getWesternNeighbour());
+            }
+            if(isBorderNorth){
+                geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
+            }
         }
 
         return geoHashToReturn;
     }
 
-    public static GeoHash moveSouthWest(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
-        GeoHash geoHashToReturn;
+    public static List<GeoHash> moveSouthEast(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
 
-        if(!geoHashPerimeter.contains(currentGeoHash.getSouthernNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour())){
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour();
+        boolean isBorderSouth = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour());
+        boolean isBorderEast = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getEasternNeighbour());
+
+        if(!geoHashPerimeter.contains(currentGeoHash.getEasternNeighbour()) && isBorderEast){
+            geoHashToReturn.add(currentGeoHash.getEasternNeighbour());
         }
-        else if(!geoHashPerimeter.contains(currentGeoHash.getWesternNeighbour()) &&
-                isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getWesternNeighbour())){
-            geoHashToReturn = currentGeoHash.getWesternNeighbour();
+        if(!geoHashPerimeter.contains(currentGeoHash.getSouthernNeighbour()) && isBorderSouth){
+            geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
         }
-        else if(isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour().getWesternNeighbour())){
-            geoHashToReturn = currentGeoHash.getSouthernNeighbour().getWesternNeighbour();
+
+        if(geoHashToReturn.size() == 0){
+            if(isBorderEast){
+                geoHashToReturn.add(currentGeoHash.getEasternNeighbour());
+            }
+            if(isBorderSouth){
+                geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
+            }
         }
-        else{
-            geoHashToReturn = currentGeoHash.getNorthernNeighbour().getWesternNeighbour();
+
+        return geoHashToReturn;
+    }
+
+    public static List<GeoHash> moveSouthWest(LinkedHashSet<GeoHash> geoHashPerimeter, GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon){
+        List<GeoHash> geoHashToReturn = new ArrayList<>();
+
+        boolean isBorderSouth = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getSouthernNeighbour());
+        boolean isBorderWest = isGeoHashBordersWithPolygon(geometryPolygon, currentGeoHash.getWesternNeighbour());
+
+        if(!geoHashPerimeter.contains(currentGeoHash.getWesternNeighbour()) && isBorderWest){
+            geoHashToReturn.add(currentGeoHash.getWesternNeighbour());
+        }
+        if(!geoHashPerimeter.contains(currentGeoHash.getSouthernNeighbour()) && isBorderSouth){
+            geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
+        }
+
+        if(geoHashToReturn.size() == 0){
+            if(isBorderWest){
+                geoHashToReturn.add(currentGeoHash.getWesternNeighbour());
+            }
+            if(isBorderSouth){
+                geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
+            }
         }
 
         return geoHashToReturn;

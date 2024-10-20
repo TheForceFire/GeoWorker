@@ -16,10 +16,10 @@ public class GeoHashUtil {
 
     public static List<String> featureCollectionToGeoHash(FeatureCollection featureCollection, int precision){
         Set<String> geoHashesSet = new HashSet<>();
-        featureCollection = transformFeatureCollectionMultiPolygonsToPolygons(featureCollection);
+        FeatureCollection featureCollectionPolygons = transformFeatureCollectionMultiPolygonsToPolygons(featureCollection);
 
-        for(int i = 0; i < featureCollection.getFeatures().size(); i++){
-            Polygon polygon = (Polygon) featureCollection.getFeatures().get(i).getGeometry();
+        for(int i = 0; i < featureCollectionPolygons.getFeatures().size(); i++){
+            Polygon polygon = (Polygon) featureCollectionPolygons.getFeatures().get(i).getGeometry();
             List<LngLatAlt> listPolygon = polygon.getExteriorRing();
 
             geoHashesSet.addAll(calculateGeoHashList(listPolygon, precision));
@@ -136,14 +136,33 @@ public class GeoHashUtil {
                 LongitudeDirection longitudeDirection = setLongitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
 
                 do {
-                    currentGeoHash = moveGeoHashByDirections(currentGeoHash, geometryPolygon, latitudeDirection, longitudeDirection, geoHashPerimeter);
+                    List<GeoHash> geoHashesToAdd = moveGeoHashesByDirections(currentGeoHash, geometryPolygon, latitudeDirection, longitudeDirection, geoHashPerimeter);
+
+
+                    double latDelta = Math.abs(currentGeoHashPoint.getLatitude() - nextGeoHashPoint.getLatitude());
+                    double lonDelta = Math.abs(currentGeoHashPoint.getLongitude() - nextGeoHashPoint.getLongitude()) * Math.cos(Math.toRadians(currentGeoHashPoint.getLatitude()));
+
+
+                    if(geoHashesToAdd.size() == 2){
+                        if(latDelta > lonDelta) {
+                            currentGeoHash = geoHashesToAdd.get(1);
+                        }
+                        else{
+                            currentGeoHash = geoHashesToAdd.get(0);
+                        }
+                    }
+                    else{
+                        currentGeoHash = geoHashesToAdd.get(0);
+                    }
+
 
                     currentGeoHashPoint = currentGeoHash.getBoundingBoxCenter();
                     latitudeDirection = setLatitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
                     longitudeDirection = setLongitudeDirection(currentGeoHashPoint, nextGeoHashPoint);
 
+
                     neighboursCurrentGeoHash = currentGeoHash.getAdjacent();
-                    geoHashSet.add(currentGeoHash);
+                    geoHashSet.addAll(geoHashesToAdd);
                 }
                 while (!isGeoHashArrayContainsGeoHash(neighboursCurrentGeoHash, nextGeoHash));
 
@@ -185,9 +204,9 @@ public class GeoHashUtil {
     }
 
 
-    private static GeoHash moveGeoHashByDirections(GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon,
-                                            LatitudeDirection latitudeDirection, LongitudeDirection longitudeDirection, LinkedHashSet<GeoHash> geoHashPerimeter){
-        GeoHash geoHashToReturn;
+    private static List<GeoHash> moveGeoHashesByDirections(GeoHash currentGeoHash, org.locationtech.jts.geom.Polygon geometryPolygon, LatitudeDirection latitudeDirection,
+                                                           LongitudeDirection longitudeDirection, LinkedHashSet<GeoHash> geoHashPerimeter){
+        List<GeoHash> geoHashToReturn;
 
         if(latitudeDirection == LatitudeDirection.Same){
             geoHashToReturn = DirectionMoverUtil.moveLatSame(longitudeDirection, currentGeoHash);
