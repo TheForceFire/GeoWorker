@@ -1,1 +1,1 @@
-s00,s01,s02,s04,s03,s06,ebk,ebm,ebh,ebq,ebj,ebr,ebh,ebp,kpb,kpc,kpf
+s00,s01,s02,s04,s03,s06,ebk,ebm,ebh,ebq,ebj,ebr,ebh,ebp,kpb,kpc,kpf,kpd,kpe,7ze,kpg,7zg,7zs,7zt,kp8,7zu,7zv,7zw,kp9,7zx,7zy,7zz,s05,eb5,s07,eb7
