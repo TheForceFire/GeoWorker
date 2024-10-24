@@ -6,11 +6,11 @@ import java.util.LinkedHashSet;
 
 class FastForwardUtil {
 
-    public static LinkedHashSet<GeoHash> fastForwardEast(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
-        LinkedHashSet<GeoHash> geoHashesNewSet = new LinkedHashSet<>();
+    public static LinkedHashSet<String> fastForwardEast(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
+        LinkedHashSet<String> geoHashesNewSet = new LinkedHashSet<>();
 
         while (!geoHashesSetPerimeter.contains(geoHashToFastForward.getEasternNeighbour())){
-            geoHashesNewSet.add(geoHashToFastForward.getEasternNeighbour());
+            geoHashesNewSet.add(geoHashToFastForward.getEasternNeighbour().toBase32());
 
             geoHashToFastForward = geoHashToFastForward.getEasternNeighbour();
         }
@@ -18,11 +18,11 @@ class FastForwardUtil {
         return geoHashesNewSet;
     }
 
-    public static LinkedHashSet<GeoHash> fastForwardNorth(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
-        LinkedHashSet<GeoHash> geoHashesNewSet = new LinkedHashSet<>();
+    public static LinkedHashSet<String> fastForwardNorth(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
+        LinkedHashSet<String> geoHashesNewSet = new LinkedHashSet<>();
 
         while (!geoHashesSetPerimeter.contains(geoHashToFastForward.getNorthernNeighbour())){
-            geoHashesNewSet.add(geoHashToFastForward.getNorthernNeighbour());
+            geoHashesNewSet.add(geoHashToFastForward.getNorthernNeighbour().toBase32());
 
             geoHashToFastForward = geoHashToFastForward.getNorthernNeighbour();
         }
@@ -30,11 +30,11 @@ class FastForwardUtil {
         return geoHashesNewSet;
     }
 
-    public static LinkedHashSet<GeoHash> fastForwardSouth(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
-        LinkedHashSet<GeoHash> geoHashesNewSet = new LinkedHashSet<>();
+    public static LinkedHashSet<String> fastForwardSouth(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
+        LinkedHashSet<String> geoHashesNewSet = new LinkedHashSet<>();
 
         while (!geoHashesSetPerimeter.contains(geoHashToFastForward.getSouthernNeighbour())){
-            geoHashesNewSet.add(geoHashToFastForward.getSouthernNeighbour());
+            geoHashesNewSet.add(geoHashToFastForward.getSouthernNeighbour().toBase32());
 
             geoHashToFastForward = geoHashToFastForward.getSouthernNeighbour();
         }
@@ -42,11 +42,11 @@ class FastForwardUtil {
         return geoHashesNewSet;
     }
 
-    public static LinkedHashSet<GeoHash> fastForwardWest(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
-        LinkedHashSet<GeoHash> geoHashesNewSet = new LinkedHashSet<>();
+    public static LinkedHashSet<String> fastForwardWest(LinkedHashSet<GeoHash> geoHashesSetPerimeter, GeoHash geoHashToFastForward){
+        LinkedHashSet<String> geoHashesNewSet = new LinkedHashSet<>();
 
         while (!geoHashesSetPerimeter.contains(geoHashToFastForward.getWesternNeighbour())){
-            geoHashesNewSet.add(geoHashToFastForward.getWesternNeighbour());
+            geoHashesNewSet.add(geoHashToFastForward.getWesternNeighbour().toBase32());
 
             geoHashToFastForward = geoHashToFastForward.getWesternNeighbour();
         }

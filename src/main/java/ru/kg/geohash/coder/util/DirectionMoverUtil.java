@@ -58,6 +58,10 @@ class DirectionMoverUtil {
             }
         }
 
+        if(geoHashToReturn.size() == 0){
+            geoHashToReturn.add(currentGeoHash.getNorthernNeighbour().getEasternNeighbour());
+        }
+
         return geoHashToReturn;
     }
 
@@ -81,6 +85,10 @@ class DirectionMoverUtil {
             if(isBorderNorth){
                 geoHashToReturn.add(currentGeoHash.getNorthernNeighbour());
             }
+        }
+
+        if(geoHashToReturn.size() == 0){
+            geoHashToReturn.add(currentGeoHash.getNorthernNeighbour().getWesternNeighbour());
         }
 
         return geoHashToReturn;
@@ -108,6 +116,10 @@ class DirectionMoverUtil {
             }
         }
 
+        if(geoHashToReturn.size() == 0){
+            geoHashToReturn.add(currentGeoHash.getSouthernNeighbour().getEasternNeighbour());
+        }
+
         return geoHashToReturn;
     }
 
@@ -131,6 +143,10 @@ class DirectionMoverUtil {
             if(isBorderSouth){
                 geoHashToReturn.add(currentGeoHash.getSouthernNeighbour());
             }
+        }
+
+        if(geoHashToReturn.size() == 0){
+            geoHashToReturn.add(currentGeoHash.getSouthernNeighbour().getWesternNeighbour());
         }
 
         return geoHashToReturn;
