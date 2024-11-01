@@ -156,7 +156,10 @@ public class GeoHashUtil {
 
         if(!currentGeoHash.equals(nextGeoHash)) {
             GeoHash[] neighboursCurrentGeoHash = currentGeoHash.getAdjacent();
-            if (isGeoHashArrayContainsGeoHash(neighboursCurrentGeoHash, nextGeoHash)) {
+            //нужны касания без угловых соседей, то есть нужны север, юг, запад, восток
+            //getAdjacent() возвращает 8 adjacent hashes. They are in the following order: N, NE, E, SE, S, SW, W, NW
+            Set<GeoHash> neighboursCurrentGeoHashHashSet = Set.of(neighboursCurrentGeoHash[0], neighboursCurrentGeoHash[2], neighboursCurrentGeoHash[4], neighboursCurrentGeoHash[6]);
+            if (neighboursCurrentGeoHashHashSet.contains(nextGeoHash)) {
                 geoHashSet.add(nextGeoHash);
             } else {
                 WGS84Point currentGeoHashPoint = currentGeoHash.getBoundingBoxCenter();
@@ -192,9 +195,10 @@ public class GeoHashUtil {
 
 
                     neighboursCurrentGeoHash = currentGeoHash.getAdjacent();
+                    neighboursCurrentGeoHashHashSet = Set.of(neighboursCurrentGeoHash[0], neighboursCurrentGeoHash[2], neighboursCurrentGeoHash[4], neighboursCurrentGeoHash[6]);
                     geoHashSet.addAll(geoHashesToAdd);
                 }
-                while (!isGeoHashArrayContainsGeoHash(neighboursCurrentGeoHash, nextGeoHash));
+                while (!neighboursCurrentGeoHashHashSet.contains(nextGeoHash));
 
                 geoHashSet.add(nextGeoHash);
             }
@@ -273,21 +277,6 @@ public class GeoHashUtil {
         Point currentPoint = GeometryConvertorUtil.lngLatAltToPoint(currentLngLatAlt);
         boolean isInPolygon = geometryPolygon.contains(currentPoint);
         return isInPolygon;
-    }
-
-    private static boolean isGeoHashArrayContainsGeoHash(GeoHash[] geoHashArray, GeoHash geoHash){
-        boolean isContains = false;
-
-        int i = 0;
-        while(i < geoHashArray.length && !isContains){
-            if(i % 2 == 0 && geoHashArray[i].equals(geoHash)){
-                isContains = true;
-            }
-
-            i++;
-        }
-
-        return isContains;
     }
 
     private static Set<String> geoHashSetToGeoHashStringSet(LinkedHashSet<GeoHash> geoHashSet){
