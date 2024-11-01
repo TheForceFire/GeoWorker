@@ -288,25 +288,4 @@ public class GeoHashUtil {
 
         return geoHashStringSet;
     }
-
-    public static boolean compareGeoHashStringLists(List<String> geoHashStringList1, List<String> geoHashStringList2){
-        boolean isEquals = true;
-
-        if(geoHashStringList1.size() != geoHashStringList2.size()){
-            isEquals = false;
-        }
-        if(isEquals){
-            int i = 0;
-
-            while (i < geoHashStringList1.size() && isEquals){
-                if(!geoHashStringList1.contains(geoHashStringList2.get(i))){
-                    isEquals = false;
-                }
-
-                i++;
-            }
-        }
-
-        return isEquals;
-    }
 }
