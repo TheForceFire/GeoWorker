@@ -11,103 +11,63 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GeoHashUtilTest {
 
     @Test
     void geoJsonToGeoHashTest1() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1.json");
+        try(InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map1Expected.txt");
-
-        if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
+        BufferedReader bufferedReaderExpectedMapFile = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile))) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
-            inputStreamMapFile.close();
-
             List<String> actualGeohashList = GeoHashUtil.featureCollectionToGeoHash(inputFeatureCollection, 2);
+            List<String> expectedGeohashList = bufferedReaderExpectedMapFile.lines().flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
 
-            List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
-                    .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
-            inputStreamExpectedMapFile.close();
-
-            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
-            assertTrue(isEquals, "Feature collections are not the same!");
-        }
-        else{
-            throw new IllegalArgumentException("File not found");
+            assertThat(actualGeohashList).containsExactlyInAnyOrderElementsOf(expectedGeohashList);
         }
     }
 
     @Test
     void geoJsonToGeoHashTest2() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2.json");
+        try(InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map2Expected.txt");
-
-        if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
+        BufferedReader bufferedReaderExpectedMapFile = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile))) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
-            inputStreamMapFile.close();
-
             List<String> actualGeohashList = GeoHashUtil.featureCollectionToGeoHash(inputFeatureCollection, 2);
+            List<String> expectedGeohashList = bufferedReaderExpectedMapFile.lines().flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
 
-            List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
-                    .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
-            inputStreamExpectedMapFile.close();
-
-            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
-            assertTrue(isEquals, "Feature collections are not the same!");
-        }
-        else{
-            throw new IllegalArgumentException("File not found");
+            assertThat(actualGeohashList).containsExactlyInAnyOrderElementsOf(expectedGeohashList);
         }
     }
 
     @Test
     void geoJsonToGeoHashTest3() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map3.json");
+        try(InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map3.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map3Expected.txt");
-
-        if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
+        BufferedReader bufferedReaderExpectedMapFile = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile))) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
-            inputStreamMapFile.close();
-
             List<String> actualGeohashList = GeoHashUtil.featureCollectionToGeoHash(inputFeatureCollection, 2);
+            List<String> expectedGeohashList = bufferedReaderExpectedMapFile.lines().flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
 
-            List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
-                    .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
-            inputStreamExpectedMapFile.close();
-
-            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
-            assertTrue(isEquals, "Feature collections are not the same!");
-        }
-        else{
-            throw new IllegalArgumentException("File not found");
+            assertThat(actualGeohashList).containsExactlyInAnyOrderElementsOf(expectedGeohashList);
         }
     }
 
     @Test
     void geoJsonToGeoHashTest4() throws IOException {
-        InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map4.json");
+        try(InputStream inputStreamMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map4.json");
         InputStream inputStreamExpectedMapFile = getClass().getClassLoader().getResourceAsStream("geohashUtilTest/Map4Expected.txt");
-
-        if(inputStreamMapFile != null && inputStreamExpectedMapFile != null) {
+        BufferedReader bufferedReaderExpectedMapFile = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile))) {
 
             FeatureCollection inputFeatureCollection = GeoJsonFileManager.loadGeoJsonFile(inputStreamMapFile);
-            inputStreamMapFile.close();
-
             List<String> actualGeohashList = GeoHashUtil.featureCollectionToGeoHash(inputFeatureCollection, 2);
+            List<String> expectedGeohashList = bufferedReaderExpectedMapFile.lines().flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
 
-            List<String> expectedGeohashList = new BufferedReader(new InputStreamReader(inputStreamExpectedMapFile)).lines()
-                    .flatMap(line -> Arrays.stream(line.split(","))).map(String::trim).toList();
-            inputStreamExpectedMapFile.close();
-
-            boolean isEquals = GeoHashUtil.compareGeoHashStringLists(actualGeohashList, expectedGeohashList);
-            assertTrue(isEquals, "Feature collections are not the same!");
-        }
-        else{
-            throw new IllegalArgumentException("File not found");
+            assertThat(actualGeohashList).containsExactlyInAnyOrderElementsOf(expectedGeohashList);
         }
     }
 }
