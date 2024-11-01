@@ -1,23 +1,22 @@
 package ru.kg.geojson.separator.util;
 
-import org.geojson.Feature;
-import org.geojson.FeatureCollection;
-import org.geojson.LngLatAlt;
-import org.geojson.Polygon;
+import org.geojson.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 class GeoJsonPrimeMeridianSeparator {
 
-    public static FeatureCollection separatePrimeMeridian(FeatureCollection featureCollection, int featureIndex){
-        PolygonsListSeparated separatedLists = setPolygonsListSeparated(featureCollection, featureIndex);
+    public static FeatureCollection separatePrimeMeridian(FeatureCollection originFeatureCollection, int featureIndex){
+        Polygon polygon = (Polygon) originFeatureCollection.getFeatures().get(featureIndex).getGeometry();
+        List<LngLatAlt> polygonList = polygon.getExteriorRing();
+        PolygonsListSeparated separatedLists = setPolygonsListSeparated(polygonList);
         FeatureCollection primeMeridianFeatureCollection = getPolygonsToFeatureCollection(separatedLists);
         return primeMeridianFeatureCollection;
     }
 
-    private static PolygonsListSeparated setPolygonsListSeparated(FeatureCollection featureCollection, int featureIndex){
-        List<LngLatAlt> separatedPoints = calculateZeroCoordinates(featureCollection, featureIndex);
+    private static PolygonsListSeparated setPolygonsListSeparated(List<LngLatAlt> originPoints){
+        List<LngLatAlt> separatedPoints = calculateZeroCoordinates(originPoints);
         PolygonPlusMinusLists polygonPlusMinusLists = divideListBySign(separatedPoints);
 
         PolygonsListSeparated separatedLists = new PolygonsListSeparated();
@@ -26,24 +25,24 @@ class GeoJsonPrimeMeridianSeparator {
 
         return separatedLists;
     }
-    private static List<LngLatAlt> calculateZeroCoordinates(FeatureCollection featureCollection, int featureIndex){
+    private static List<LngLatAlt> calculateZeroCoordinates(List<LngLatAlt> originPoints){
         List<LngLatAlt> separatedPoints = new ArrayList<>();
-        Polygon originPolygon = (Polygon) featureCollection.getFeatures().get(featureIndex).getGeometry();
-        List<LngLatAlt> originPoints = originPolygon.getExteriorRing();
 
-        double sign;
-        sign = Math.signum(originPoints.get(0).getLongitude());
-        separatedPoints.add(originPoints.get(0));
-        for(int i = 1; i < originPoints.size(); i++){
-            if(sign != Math.signum(originPoints.get(i).getLongitude())){
-                double latitude = getMedianLatitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
-                        originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
-                LngLatAlt separator = new LngLatAlt(0, latitude);
+        if(originPoints.size() > 0) {
+            double sign;
+            sign = Math.signum(originPoints.get(0).getLongitude());
+            separatedPoints.add(originPoints.get(0));
+            for (int i = 1; i < originPoints.size(); i++) {
+                if (sign != Math.signum(originPoints.get(i).getLongitude())) {
+                    double latitude = getMedianLatitude(originPoints.get(i).getLatitude(), originPoints.get(i).getLongitude(),
+                            originPoints.get(i - 1).getLatitude(), originPoints.get(i - 1).getLongitude());
+                    LngLatAlt separator = new LngLatAlt(0, latitude);
 
-                separatedPoints.add(separator);
-                sign = Math.signum(originPoints.get(i).getLongitude());
+                    separatedPoints.add(separator);
+                    sign = Math.signum(originPoints.get(i).getLongitude());
+                }
+                separatedPoints.add(originPoints.get(i));
             }
-            separatedPoints.add(originPoints.get(i));
         }
 
         return separatedPoints;

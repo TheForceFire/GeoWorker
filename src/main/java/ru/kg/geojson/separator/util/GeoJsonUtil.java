@@ -1,9 +1,6 @@
 package ru.kg.geojson.separator.util;
 
-import org.geojson.Feature;
-import org.geojson.FeatureCollection;
-import org.geojson.LngLatAlt;
-import org.geojson.Polygon;
+import org.geojson.*;
 
 import java.util.List;
 
@@ -11,7 +8,37 @@ import java.util.List;
 public class GeoJsonUtil {
 
     public static FeatureCollection separateGeoJson(FeatureCollection originFeatureCollection){
-        FeatureCollection finalFeatureCollection = calculateSeparatedGeoJson(originFeatureCollection);
+        FeatureCollection featureCollectionPolygons = transformFeatureCollectionMultiPolygonsToPolygons(originFeatureCollection);
+        FeatureCollection finalFeatureCollection = calculateSeparatedGeoJson(featureCollectionPolygons);
+        return finalFeatureCollection;
+    }
+
+    private static FeatureCollection transformFeatureCollectionMultiPolygonsToPolygons(FeatureCollection originFeatureCollection){
+        FeatureCollection finalFeatureCollection = new FeatureCollection();
+
+        for(int i = 0; i < originFeatureCollection.getFeatures().size(); i++) {
+            GeoJsonObject featureGeoJsonObject = originFeatureCollection.getFeatures().get(i).getGeometry();
+            Class<? extends GeoJsonObject> objectType = featureGeoJsonObject.getClass();
+
+            if (objectType.getSimpleName().equals("Polygon")) {
+                finalFeatureCollection.add(originFeatureCollection.getFeatures().get(i));
+            }
+            else if (objectType.getSimpleName().equals("MultiPolygon")) {
+                org.geojson.MultiPolygon originMultiPolygon = (MultiPolygon) originFeatureCollection.getFeatures().get(i).getGeometry();
+                List<List<List<LngLatAlt>>> originPointsList = originMultiPolygon.getCoordinates();
+
+                for(int j = 0; j < originPointsList.size(); j++){
+                    Feature featureToAdd = new Feature();
+                    Polygon polygonToAdd = new Polygon();
+                    polygonToAdd.setExteriorRing(originPointsList.get(j).get(0));
+                    featureToAdd.setGeometry(polygonToAdd);
+
+                    finalFeatureCollection.add(featureToAdd);
+                }
+
+            }
+        }
+
         return finalFeatureCollection;
     }
 
@@ -36,66 +63,5 @@ public class GeoJsonUtil {
 
         finalFeatureCollection = primeMeridianFeatureCollection;
         return finalFeatureCollection;
-    }
-
-    public static boolean compareFeatures(FeatureCollection featureCollection1, FeatureCollection featureCollection2){
-        boolean isEqual = true;
-
-        List<Feature> featureList1 = featureCollection1.getFeatures();
-        List<Feature> featureList2 = featureCollection2.getFeatures();
-
-        if(featureList1.size() != featureList2.size()){
-            isEqual = false;
-        }
-        if(isEqual) {
-            int i = 0;
-
-            while(i < featureList1.size() && isEqual){
-                Polygon polyTemp1 = (Polygon) featureList1.get(i).getGeometry();
-                Polygon polyTemp2 = (Polygon) featureList2.get(i).getGeometry();
-
-                List<LngLatAlt> polyList1 = polyTemp1.getExteriorRing();
-                List<LngLatAlt> polyList2 = polyTemp2.getExteriorRing();
-
-                if(polyList1.size() != polyList2.size()){
-                    isEqual = false;
-                }
-
-                if(isEqual){
-                    polyList1.remove(polyList1.size() - 1);
-                    polyList2.remove(polyList2.size() - 1);
-
-                    for(int k = 0; k < polyList1.size(); k++){
-                        polyList1.get(k).setLatitude( roundDouble(polyList1.get(k).getLatitude(), 3) );
-                        polyList1.get(k).setLongitude( roundDouble(polyList1.get(k).getLongitude(), 3) );
-
-                        polyList2.get(k).setLatitude( roundDouble(polyList2.get(k).getLatitude(), 3) );
-                        polyList2.get(k).setLongitude( roundDouble(polyList2.get(k).getLongitude(), 3) );
-                    }
-
-                    int j = 0;
-                    while(j < polyList1.size() && isEqual){
-                        if(!polyList1.contains(polyList2.get(j))){
-                            isEqual = false;
-                        }
-                        j++;
-                    }
-                }
-                i++;
-            }
-        }
-
-        return isEqual;
-    }
-
-    private static double roundDouble(double value, int decimals){
-        int valueToDivide = 1;
-
-        for(int i = 0; i < decimals; i++){
-            valueToDivide *= 10;
-        }
-
-        double valueToReturn = ((double) Math.round(value * valueToDivide) / valueToDivide);
-        return valueToReturn;
     }
 }
